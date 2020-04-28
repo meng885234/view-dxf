@@ -1,6 +1,6 @@
 {
   "name": "dxf-loveray",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DXF drawing online viewer, welcome to use!",
   "main": "ThreeDxf.js",
   "scripts": {
@@ -11,7 +11,9 @@
     "url": "git+https://github.com/meng885234/dxf.git"
   },
   "keywords": [
-    "dxf"
+    "dxf",
+    "dxf-loveray",
+    "loveray"
   ],
   "author": "loveray",
   "license": "ISC",
