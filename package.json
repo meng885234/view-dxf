@@ -1,6 +1,6 @@
 {
-  "name": "dxf-loveray",
-  "version": "1.0.2",
+  "name": "view-dxf",
+  "version": "1.0.0",
   "description": "DXF drawing online viewer, welcome to use!",
   "main": "src/index.js",
   "module": "src/index.js",
@@ -9,14 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meng885234/dxf.git"
+    "url": "git+https://github.com/meng885234/view-dxf.git"
   },
   "keywords": [
     "dxf",
+    "view-dxf",
+    "dxf-view",
     "dxf-loveray",
     "three-dxf",
     "cad",
-    "viewer",
+    "view",
     "three",
     "threejs",
     "loveray"
@@ -28,7 +30,7 @@
     "three": "^0.114.0"
   },
   "bugs": {
-    "url": "https://github.com/meng885234/dxf/issues"
+    "url": "https://github.com/meng885234/view-dxf/issues"
   },
-  "homepage": "https://github.com/meng885234/dxf#readme"
+  "homepage": "https://github.com/meng885234/view-dxf#readme"
 }
