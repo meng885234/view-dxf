@@ -5,7 +5,7 @@
  * 2,LineControls.js  		鼠标点击事件的操作控制器
  * 3,DragControls.js  		拖拽控件
  * 4,StateMachine.js		有限状态机，一个简单的实用程序，可让您定义状态和操作以在它们之间进行转换。
- * 5,ThreeDxf.js			Three-Dxf是一个浏览器dxf文件查看器应用，其使用dxf-parser解析dxf文件（解析出json格式），并使用three.js来渲染。
+ * 5,index.js				Three-Dxf是一个浏览器dxf文件查看器应用，其使用dxf-parser解析dxf文件（解析出json格式），并使用three.js来渲染。
  * 6,Three.js
  */
 
@@ -954,6 +954,7 @@ function show(el) { showHide(el, true); }
 function hide(el) { showHide(el); }
 
 
+/*
 export default {
     Viewer,
     defaultDisplay,
@@ -961,6 +962,9 @@ export default {
     show,
     hide
 }
+*/
+
+export default Viewer;
 
 
 

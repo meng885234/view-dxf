@@ -2,7 +2,8 @@
   "name": "dxf-loveray",
   "version": "1.0.1",
   "description": "DXF drawing online viewer, welcome to use!",
-  "main": "ThreeDxf.js",
+  "main": "src/index.js",
+  "module": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,6 +14,11 @@
   "keywords": [
     "dxf",
     "dxf-loveray",
+    "three-dxf",
+    "cad",
+    "viewer",
+    "three",
+    "threejs",
     "loveray"
   ],
   "author": "loveray",
