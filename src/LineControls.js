@@ -36,7 +36,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     let drawRectScreenCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的屏幕坐标
     let drawRectWorldCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的世界坐标
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
-    let screenData = {};
+    let screenValue = {};
     let scope = this;
 
     function activate() {
@@ -606,10 +606,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 				y: rectData.userData.drawRectWorldCoord.endY,
 				z: 0
 			}
-    		rectData.userData.drawRectScreenCoord.startX = controls.pointToScreenPosition(start).x
-			rectData.userData.drawRectScreenCoord.startY = controls.pointToScreenPosition(start).y
-			rectData.userData.drawRectScreenCoord.endX = controls.pointToScreenPosition(end).x
-			rectData.userData.drawRectScreenCoord.endY = controls.pointToScreenPosition(end).y
+    		rectData.userData.drawRectScreenCoord.startX = controls.pointToScreenPosition(start, screenValue).x
+			rectData.userData.drawRectScreenCoord.startY = controls.pointToScreenPosition(start, screenValue).y
+			rectData.userData.drawRectScreenCoord.endX = controls.pointToScreenPosition(end, screenValue).x
+			rectData.userData.drawRectScreenCoord.endY = controls.pointToScreenPosition(end, screenValue).y
     		
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
@@ -646,10 +646,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		}
 		width = changeWidth
 		height = changeHeight
-		screenData.minCoordinate = dims.min
-		screenData.maxCoordinate = dims.max
-		screenData.canvasWidth = changeWidth
-		screenData.canvasHeight = changeHeight
+		screenValue.minCoordinate = dims.min
+		screenValue.maxCoordinate = dims.max
+		screenValue.canvasWidth = changeWidth
+		screenValue.canvasHeight = changeHeight
 		INTERSECTED = null
 		INTERSECTEDFIRST = null
 		/**

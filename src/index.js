@@ -319,10 +319,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			y: item.coordinate.drawRectWorldCoord.endY,
 			z: 0
 		}
-		item.coordinate.drawRectScreenCoord.startX = controls.pointToScreenPosition(start).x
-		item.coordinate.drawRectScreenCoord.startY = controls.pointToScreenPosition(start).y
-		item.coordinate.drawRectScreenCoord.endX = controls.pointToScreenPosition(end).x
-		item.coordinate.drawRectScreenCoord.endY = controls.pointToScreenPosition(end).y
+		let screenValue = {
+			minCoordinate: dims.min,
+			maxCoordinate: dims.max,
+			canvasWidth: recordWidth,
+			canvasHeight: recordHeight
+		}
+		item.coordinate.drawRectScreenCoord.startX = controls.pointToScreenPosition(start, screenValue).x
+		item.coordinate.drawRectScreenCoord.startY = controls.pointToScreenPosition(start, screenValue).y
+		item.coordinate.drawRectScreenCoord.endX = controls.pointToScreenPosition(end, screenValue).x
+		item.coordinate.drawRectScreenCoord.endY = controls.pointToScreenPosition(end, screenValue).y
     	callback(item)
     }
     
@@ -333,17 +339,21 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 重置相机位置
 	this.onWindowResize = function (changeWidth, changeHeight) {
-		camera = null
-		camera = initCamera(changeWidth,changeHeight)
-		camera.updateProjectionMatrix()
-		renderer.setSize( changeWidth, changeHeight );
 		
-		controls.changeOrbitControls(dims, changeWidth, changeHeight, camera, parent, scene)
+		recordWidth = changeWidth
+		recordHeight = changeHeight
+		
+		camera = null
+		camera = initCamera(recordWidth,recordHeight)
+		camera.updateProjectionMatrix()
+		renderer.setSize( recordWidth, recordHeight );
+		
+		controls.changeOrbitControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    controls.target.x = camera.position.x;
 	    controls.target.y = camera.position.y;
 	    controls.update('dxfDrawLoadingFinished');
 		
-	    LineControl.changeLineControls(dims, changeWidth, changeHeight, camera, parent, scene)
+	    LineControl.changeLineControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    LineControl.LineRender(this.renderer);
 		
 		this.render()
