@@ -94,6 +94,10 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
  * @param {Object} font - a font loaded with THREE.FontLoader 
  * @constructor
  */
+
+// 记录角色所对应的颜色值
+let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#FC0261' ]
+
 function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 全局this
@@ -109,7 +113,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     createLineTypeShaders(data);
 
     var scene = new THREE.Scene();
-
 
     // Create scene from dxf object (data)
     var i, entity, obj, min_x, min_y, min_z, max_x, max_y, max_z;
@@ -154,7 +157,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     controls.update('dxfDrawLoadingFinished');
     
     this.render();
-    
     
     setTimeout(() => {
     	// 场景添加对象
@@ -265,10 +267,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         geometry = new THREE.TextGeometry(str, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        material = new THREE.MeshBasicMaterial({ color: roleColorData[entity.toRole] });
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
-        text.position.y = entity.coordinate.drawRectWorldCoord.endY - 1.1;
+        text.position.y = entity.coordinate.drawRectWorldCoord.startY - 1.1;
         text.position.z = entity.z || 0;
         text.name = 'type' + entity.dxfAnnotationId
         return text;
@@ -280,30 +282,24 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         geometry = new THREE.TextGeometry(entity.content, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        material = new THREE.MeshBasicMaterial({ color: roleColorData[entity.toRole] });
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
-        text.position.y = entity.coordinate.drawRectWorldCoord.endY - 2.3;
+        text.position.y = entity.coordinate.drawRectWorldCoord.startY - 2.3;
         text.position.z = entity.z || 0;
         text.name = 'content' + entity.dxfAnnotationId
         return text;
     }
     
-    // 高亮选中的矩形框
-    let selectedDxfAnnotation = ''
+    // 闪烁选中的矩形框
     this.selectedDxfAnnotationCtrl = function (data) {
-    	if (selectedDxfAnnotation && selectedDxfAnnotation.material) {
-    		selectedDxfAnnotation.material.color.set( 0x409EFF )
-    	}
-    	selectedDxfAnnotation = scene.getObjectByName(data.dxfAnnotationId)
-    	// 闪烁
     	for (let i = 0; i < 4; i++) {
     		setTimeout(() => {
     			if (parseInt(i%2) > 0) {
-    				selectedDxfAnnotation.material.color.set( 0x409EFF )
+    				scene.getObjectByName(data.dxfAnnotationId).material.color.set( roleColorData[data.toRole] )
     				this.render()
     			} else {
-    				selectedDxfAnnotation.material.color.set( 0x00ff00 )
+    				scene.getObjectByName(data.dxfAnnotationId).material.color.set( roleColorData[0] )
     				this.render()
     			}
     		}, i * 200)
@@ -323,10 +319,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			y: item.coordinate.drawRectWorldCoord.endY,
 			z: 0
 		}
-		item.coordinate.drawRectScreenCoord.startX = LineControl.pointToScreenPosition(start).x
-		item.coordinate.drawRectScreenCoord.startY = LineControl.pointToScreenPosition(start).y
-		item.coordinate.drawRectScreenCoord.endX = LineControl.pointToScreenPosition(end).x
-		item.coordinate.drawRectScreenCoord.endY = LineControl.pointToScreenPosition(end).y
+		item.coordinate.drawRectScreenCoord.startX = controls.pointToScreenPosition(start).x
+		item.coordinate.drawRectScreenCoord.startY = controls.pointToScreenPosition(start).y
+		item.coordinate.drawRectScreenCoord.endX = controls.pointToScreenPosition(end).x
+		item.coordinate.drawRectScreenCoord.endY = controls.pointToScreenPosition(end).y
     	callback(item)
     }
     

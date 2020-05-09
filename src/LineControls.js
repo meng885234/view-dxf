@@ -14,15 +14,23 @@ var objects = [];//将需要拖拽的元素放进这个集合中
 var pointsArray = [];
 var window_mouse = true;
 
-let LineControlsCallback = '';	// 绘制面积，距离，角度，周长的回调
-let pointsArrayStr = [];		// 记录当前点击的点的集合
-let commonDxfDrawEventType = '';// 记录外部操作的type
+let LineControlsCallback = ''	// 绘制面积，距离，角度，周长的回调
+let pointsArrayStr = []			// 记录当前点击的点的集合
+let commonDxfDrawEventType = ''	// 记录外部操作的type
+let bezierCurveLength = 2
+let bezierCurveHeight = 3
+let bezierCurveArr = []
+
+// 记录角色所对应的颜色值
+let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#FC0261' ]
 
 export default function LineControls(camera,parent,scene,width,height,controls,dxfCallback) {
     var deleteLine = document.getElementById("delete");
     var listBox = document.getElementById('dxfOperateList');//获取自定义右键菜单
-    var drawLineBtn = document.getElementById("drawLine");
-    var drawRectBtn = document.getElementById("drawRect");
+    var drawLineBtn = document.getElementById("drawLineId");
+    var drawRectBtn = document.getElementById("drawRectId");
+    var drawCloudBtn = document.getElementById("drawCloudId");
+    var drawPlaneBtn = document.getElementById("drawPlaneId");
     var isDrawing = false;
     
     let drawRectScreenCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的屏幕坐标
@@ -46,10 +54,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     var fsm = new StateMachine({
         init: 'highlight',
         transitions: [
-            { name: 'highlight',   from: '*', to: 'highlight'  },
-            { name: 'select',     from: '*',  to: 'selected' },
-            { name: 'drawLine', from: '*', to: 'drawingLine'    },
-            { name: 'drawRect', from: '*', to: 'drawingRect'    }
+            { name: 'highlight',	from: '*',	to: 'highlight'		},
+            { name: 'select',		from: '*',	to: 'selected'		},
+            { name: 'drawLine',		from: '*',	to: 'drawingLine'	},
+            { name: 'drawRect', 	from: '*',	to: 'drawingRect'	},
+            { name: 'drawCloud', 	from: '*',	to: 'drawingCloud'	},
+            { name: 'drawPlane', 	from: '*',	to: 'drawingPlane'	}
         ],
         methods: {
             onEnterHighlight:function(){
@@ -58,10 +68,33 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                     INTERSECTEDFIRST = null;
                     renderer.render(scene,camera);
                 }
+                // 关闭矩形框状态
+                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
+                // 关闭云线状态
+                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
+                // 关闭平面状态
+                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
             },
+            onEnterDrawingRect:function(){
+                // 关闭云线状态
+                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
+                // 关闭平面状态
+                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
+            },
+            onEnterDrawingCloud:function(){
+                // 关闭矩形框状态
+                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
+                // 关闭平面状态
+                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
+            },
+            onEnterDrawingPlane:function(){
+                // 关闭矩形框状态
+                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
+                // 关闭云线状态
+                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
+            }
         }
     });
-
 
     function onDocumentMouseDown(e) {
         switch (fsm.state) {
@@ -76,14 +109,35 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             case 'drawingRect':
                 var btnNum = e.button;
                 if (btnNum == 0){
-                	
                 	// 省的点击取消的时候再删除之前没有保存的批注框了
             		renderer.render(scene,camera);
-                	
-                	// 记录绘制矩形的开始点屏幕坐标
+                	// 记录绘制开始点屏幕坐标
                 	drawRectScreenCoord.startX = event.clientX
                 	drawRectScreenCoord.startY = event.clientY
-                	
+                    vectorRect = getIntersects(e);
+                    isDrawing = true;
+                }
+                break;
+            case 'drawingCloud':
+                var btnNum = e.button;
+                if (btnNum == 0){
+                	// 省的点击取消的时候再删除之前没有保存的批注框了
+            		renderer.render(scene,camera);
+                	// 记录绘制开始点屏幕坐标
+                	drawRectScreenCoord.startX = event.clientX
+                	drawRectScreenCoord.startY = event.clientY
+                    vectorRect = getIntersects(e);
+                    isDrawing = true;
+                }
+                break;
+            case 'drawingPlane':
+                var btnNum = e.button;
+                if (btnNum == 0){
+                	// 省的点击取消的时候再删除之前没有保存的批注框了
+            		renderer.render(scene,camera);
+                	// 记录绘制开始点屏幕坐标
+                	drawRectScreenCoord.startX = event.clientX
+                	drawRectScreenCoord.startY = event.clientY
                     vectorRect = getIntersects(e);
                     isDrawing = true;
                 }
@@ -105,6 +159,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             case 'drawingRect':
                 drawRectangleOnMove(e);
                 break;
+            case 'drawingCloud':
+                drawCloudOnMove(e);
+                break;
+            case 'drawingPlane':
+                drawPlaneOnMove(e);
+                break;
         }
     }
 
@@ -120,6 +180,14 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 break;
             case 'drawingRect':
                 drawRectangleEnd(event);
+                isDrawing = false;
+                break;
+            case 'drawingCloud':
+                drawCloudEnd(event);
+                isDrawing = false;
+                break;
+            case 'drawingPlane':
+                drawPlaneEnd(event);
                 isDrawing = false;
                 break;
         }
@@ -157,16 +225,16 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 /*
                 if (INTERSECTEDLIST && INTERSECTEDLIST.length>0) {
                 	INTERSECTEDLIST.forEach((item,index) => {
-                		INTERSECTEDLIST[index].object.material.color.set( 0x00ff00 );
+                		INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
                 	})
                 }
                 INTERSECTEDLIST = intersects
                 INTERSECTEDLIST.forEach((item,index) => {
-                	INTERSECTEDLIST[index].object.material.color.set( 0xFF3030 );
+                	INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
                 })
                 */
                 
-                intersects[0].object.material.color.set( 0x00ff00 );
+                intersects[0].object.material.color.set( roleColorData[0] );
                 
                 renderer.render(scene, camera);
             }
@@ -193,7 +261,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             /*
             if (INTERSECTEDLIST && INTERSECTEDLIST.length>0) {
             	INTERSECTEDLIST.forEach((item,index) => {
-                	INTERSECTEDLIST[index].object.material.color.set( 0x00ff00 );
+                	INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
                 })
             	INTERSECTEDLIST = []
             }
@@ -233,7 +301,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                     INTERSECTEDFIRST = INTERSECTED;
                     INTERSECTED = null;
                     //改变物体的颜色
-                    intersects[0].object.material.color.set( 0x00ff00 );
+                    intersects[0].object.material.color.set( roleColorData[0] );
                     if (objects.length > 0){
                         objects.pop();
                     }
@@ -282,7 +350,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             var pointsGeometry = new THREE.Geometry();
             //console.log("个数；" + intersects.length);
             pointsGeometry.vertices.push(intersects);
-            var pointsMaterial = new THREE.PointsMaterial({color:0xff0000, size: 3});
+            var pointsMaterial = new THREE.PointsMaterial({color: roleColorData[0], size: 3});
             var points = new THREE.Points(pointsGeometry, pointsMaterial);
             pointsArray.push(points);
             
@@ -290,7 +358,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 
             /* 创建线段 */
             var lineGeometry = new THREE.Geometry();
-            var lineMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+            var lineMaterial = new THREE.LineBasicMaterial({color: roleColorData[0]});
 			
             pointsArrayStr.push(points);
 			pointsArrayStr = JSON.parse(JSON.stringify(pointsArrayStr))
@@ -370,12 +438,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         }
         /* 创建线段 */
         var lineGeometry = new THREE.Geometry();
-        var lineMaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+        var lineMaterial = new THREE.LineBasicMaterial({color: roleColorData[0]});
         if (pointsArray.length > 0){
             lineGeometry.vertices.push(pointsArray[0].geometry.vertices[0]);
             var pointsGeometry = new THREE.Geometry();
             pointsGeometry.vertices.push(intersects);
-            var pointsMaterial = new THREE.PointsMaterial({color:0x00ff00, size: 3});
+            var pointsMaterial = new THREE.PointsMaterial({color: roleColorData[0], size: 3});
             var points = new THREE.Points(pointsGeometry, pointsMaterial);
             lineGeometry.vertices.push(points.geometry.vertices[0]);
             var line = new THREE.Line(lineGeometry, lineMaterial);
@@ -384,134 +452,119 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             renderer.render(scene,camera);
         }
     }
-
-    function drawRectangleOnMove(e){
+	
+	// 绘制矩形框
+    function drawRectangleOnMove(event){
         if (isDrawing){
             if (scene.getObjectByName('rect_move')) {
                 scene.remove(scene.getObjectByName('rect_move'));
             }
-            var rectShape = new THREE.Shape();
-            var vector = getIntersects(e);
-            rectShape.moveTo(vectorRect.x,vectorRect.y);
-            rectShape.lineTo(vectorRect.x,vector.y);
-            rectShape.lineTo(vector.x,vector.y);
-            rectShape.lineTo(vector.x,vectorRect.y);
-            rectShape.lineTo(vectorRect.x,vectorRect.y);
-            var points = rectShape.getPoints();
-            var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-            // var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: 0x000000 } ) );
-            
-            // 这两行是绘制的虚线
-            var line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
-            line.computeLineDistances()
-            
-            line.name = 'rect_move';
-            scene.add( line );
+            computeStartEnd(event)
+            // 绘制矩形框
+			drawRectBox(drawRectWorldCoord)
         }
-
     }
     function drawRectangleEnd(event) {
         if (isDrawing){
-        	
         	// 记录绘制矩形的结束点屏幕坐标
         	drawRectScreenCoord.endX = event.clientX
             drawRectScreenCoord.endY = event.clientY
-            
             if (scene.getObjectByName('rect_move')) {
                 scene.remove(scene.getObjectByName('rect_move'));
             }
-            var rectShape = new THREE.Shape();
-            var vector = getIntersects(event);
-            rectShape.moveTo(vectorRect.x,vectorRect.y);
-            rectShape.lineTo(vectorRect.x,vector.y);
-            rectShape.lineTo(vector.x,vector.y);
-            rectShape.lineTo(vector.x,vectorRect.y);
-            rectShape.lineTo(vectorRect.x,vectorRect.y);
-            var points = rectShape.getPoints();
-            var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-            // var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: 0x000000 } ) );
-            
-            // 这两行是绘制的虚线
-            var line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
-            line.computeLineDistances()
-            
-            // 记录绘制矩形的开始点与结束点的屏幕坐标所对应的世界坐标
-            drawRectWorldCoord.startX = vectorRect.x
-            drawRectWorldCoord.startY = vectorRect.y
-            drawRectWorldCoord.endX = vector.x
-            drawRectWorldCoord.endY = vector.y
-            
+            computeStartEnd(event)
             boundingClientRect = event.target.getBoundingClientRect();
-            
             if (LineControlsCallback) {
             	// 外部调用绘制面积，距离，角度，周长
             	LineControlsCallback(drawRectWorldCoord)
-            	line.name = 'drawRectCallback'
-            	scene.add(line)
-            	renderer.render(scene,camera);
+            	drawRectBox(drawRectWorldCoord)
             	setTimeout(() => {
             		fsm.highlight();
             		LineControlsCallback = ''
             	}, 100)
             } else {
-            	// 批注框选-前端计算
-            	// drawRectSelected(line)
             	// 批注框选-传入屏幕坐标，后端计算
-            	sendSelectedModelId([], line)
+            	sendSelectedModelId([], 'drawRectType')
             }
-            
+        }
+    }
+    // 绘制云线框
+    function drawCloudOnMove(event){
+        if (isDrawing){
+            if (scene.getObjectByName('cloud_move')) {
+                scene.remove(scene.getObjectByName('cloud_move'));
+            }
+            computeStartEnd(event)
+            // 绘制矩形框
+			drawCloudBox(drawRectWorldCoord)
+        }
+    }
+    function drawCloudEnd(event) {
+        if (isDrawing){
+        	// 记录绘制矩形的结束点屏幕坐标
+        	drawRectScreenCoord.endX = event.clientX
+            drawRectScreenCoord.endY = event.clientY
+            if (scene.getObjectByName('cloud_move')) {
+                scene.remove(scene.getObjectByName('cloud_move'));
+            }
+            computeStartEnd(event)
+            boundingClientRect = event.target.getBoundingClientRect();
+        	// 批注框选-传入屏幕坐标，后端计算
+        	sendSelectedModelId([], 'drawCloudType')
+        }
+    }
+    // 绘制平面
+    function drawPlaneOnMove(event){
+        if (isDrawing){
+            if (scene.getObjectByName('plane_move')) {
+                scene.remove(scene.getObjectByName('plane_move'));
+            }
+            computeStartEnd(event)
+            // 绘制平面
+			drawPlaneBox(drawRectWorldCoord)
+        }
+    }
+    function drawPlaneEnd(event) {
+        if (isDrawing){
+        	// 记录绘制矩形的结束点屏幕坐标
+        	drawRectScreenCoord.endX = event.clientX
+            drawRectScreenCoord.endY = event.clientY
+            if (scene.getObjectByName('plane_move')) {
+                scene.remove(scene.getObjectByName('plane_move'));
+            }
+            computeStartEnd(event)
+            boundingClientRect = event.target.getBoundingClientRect();
+        	// 批注框选-传入屏幕坐标，后端计算
+        	sendSelectedModelId([], 'drawPlaneType')
         }
     }
     
-    // 判断当前选中的所有屏幕坐标对应的物体
-    function drawRectSelected(line){
-    	let arr = []
-    	let minx = drawRectScreenCoord.startX < drawRectScreenCoord.endX ? drawRectScreenCoord.startX : drawRectScreenCoord.endX
-    	let miny = drawRectScreenCoord.startY < drawRectScreenCoord.endY ? drawRectScreenCoord.startY : drawRectScreenCoord.endY
-    	let maxx = drawRectScreenCoord.startX < drawRectScreenCoord.endX ? drawRectScreenCoord.endX : drawRectScreenCoord.startX
-    	let maxy = drawRectScreenCoord.startY < drawRectScreenCoord.endY ? drawRectScreenCoord.endY : drawRectScreenCoord.startY
-    	
-    	// 为了加快查找进度，根据选择范围动态更改选点间距
-    	let differenceX = Math.ceil((maxx - minx) / 20)
-    	let differenceY = Math.ceil((maxy - miny) / 20)
-    	
-    	for (let i = minx; i <= maxx; i = i + differenceX) {
-    		for (let j = miny; j <= maxy; j = j + differenceY) {
-    			let obj = {
-    				x: i,
-    				y: j
-    			}
-    			arr.push(obj)
-    		}
-    	}
-    	
-    	let selectArr = []
-    	arr.forEach((item,index) => {
-    		selectArr = selectArr.concat(selectedUuidByScreenCoord(item))
-    	})
-    	sendSelectedModelId(selectArr, line)
+    // 记录绘制矩形的开始点与结束点的屏幕坐标所对应的世界坐标(start代表的是左上角，end代表的是右下角)
+    function computeStartEnd(event){
+    	/*
+        // 记录绘制矩形的开始点与结束点的屏幕坐标所对应的世界坐标
+        drawRectWorldCoord.startX = vectorRect.x
+        drawRectWorldCoord.startY = vectorRect.y
+        drawRectWorldCoord.endX = vector.x
+        drawRectWorldCoord.endY = vector.y
+        */
+    	var vector = getIntersects(event);
+        if (vectorRect.x < vector.x) {
+        	drawRectWorldCoord.startX = vectorRect.x
+        	drawRectWorldCoord.endX = vector.x
+        } else{
+        	drawRectWorldCoord.startX = vector.x
+        	drawRectWorldCoord.endX = vectorRect.x
+        }
+        if (vectorRect.y > vector.y) {
+        	drawRectWorldCoord.startY = vectorRect.y
+        	drawRectWorldCoord.endY = vector.y
+        } else{
+        	drawRectWorldCoord.startY = vector.y
+        	drawRectWorldCoord.endY = vectorRect.y
+        }
     }
-    // 根据屏幕坐标计算当前选择的构件列表
-    function selectedUuidByScreenCoord(data){
-    	let obj = {}
-        var x = data.x - boundingClientRect.left;
-        var y = data.y - boundingClientRect.top;
-        obj.x = (x / width) * 2 - 1;
-        obj.y = -(y / height) * 2 + 1;
-        var ray = new THREE.Raycaster();
-        ray.setFromCamera( obj, camera );
-        var intersects = ray.intersectObjects(scene.children, true);
-        let arr = JSON.parse(JSON.stringify(intersects))
-        return arr
-    }
-    // 根据世界坐标计算当前选择的构件
-    function selectedUuidByWorldCoord(data){
-        var ray = new THREE.Raycaster();
-        ray.setFromCamera( data, camera );
-        var intersects = ray.intersectObjects(scene.children, true);
-        let arr = JSON.parse(JSON.stringify(intersects))
-        return arr
-    }
+    
     // 根据选择的构件筛选出所有的modelId
     function filterModelIdByIntersects(intersects){
     	let arr = []
@@ -524,59 +577,22 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     	return arr
     }
     // 发送所有选中的dxf构件最对应的模型id列表
-    function sendSelectedModelId(intersects, line){
+    function sendSelectedModelId(intersects, sign){
     	let arr = []
-    	
-    	
-    	/*
-    	// 添加所点击的dxf自有的构件
-    	arr = arr.concat(filterModelIdByIntersects(intersects))
-		intersects.forEach((item,index) => {
-			if (item.object && item.object.object && item.object.object.userData && item.object.object.userData.type === 'drawRect') {
-				// 点击的自己画的框
-				if (item.object.object.userData.drawRectBoxModelId && item.object.object.userData.drawRectBoxModelId.length > 0) {
-					arr = arr.concat(item.object.object.userData.drawRectBoxModelId)
-				}
-			}
-			
-			
-			if (item.object && item.object.object && item.object.object.userData && item.object.object.userData.type === 'drawRect' && item.object.object.userData.drawRectWorldCoord) {
-				// 将自己添加的矩形框的世界坐标转换为当前所对应的屏幕坐标
-				let start = {
-					x: item.object.object.userData.drawRectWorldCoord.startX,
-					y: item.object.object.userData.drawRectWorldCoord.startY,
-					z: 0
-				}
-				let end = {
-					x: item.object.object.userData.drawRectWorldCoord.endX,
-					y: item.object.object.userData.drawRectWorldCoord.endY,
-					z: 0
-				}
-				item.object.object.userData.drawRectScreenCoord.startX = scope.pointToScreenPosition(start).x
-				item.object.object.userData.drawRectScreenCoord.startY = scope.pointToScreenPosition(start).y
-				item.object.object.userData.drawRectScreenCoord.endX = scope.pointToScreenPosition(end).x
-				item.object.object.userData.drawRectScreenCoord.endY = scope.pointToScreenPosition(end).y
-				arr = arr.concat(filterModelIdByIntersects(updateRectSelected(item.object.object.userData.drawRectScreenCoord)))
-			}
-		})
-		// 去重
-		arr = Array.from(new Set(arr))
-    	*/
-    	
-    	
     	// 绘制矩形并把它的世界坐标保存进scene
-    	if (line) {
+    	if (sign) {
     		// 给自己绘制的矩形添加特殊标识
-            line.userData.drawRectScreenCoord = JSON.parse(JSON.stringify(drawRectScreenCoord))
-            line.userData.drawRectBoxModelId = JSON.parse(JSON.stringify(arr))
-            line.userData.drawRectWorldCoord = JSON.parse(JSON.stringify(drawRectWorldCoord))
-            line.userData.type = 'drawRect'
+    		let userData = {
+    			drawRectScreenCoord: JSON.parse(JSON.stringify(drawRectScreenCoord)),
+    			drawRectWorldCoord: JSON.parse(JSON.stringify(drawRectWorldCoord)),
+    			type: sign
+    		}
             // 不在这添加，每次绘制会重新请求批注列表，把之前自己绘制的先全部删除，再重新绘制，为了给每个对象添加唯一标识---item.dxfAnnotationId
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
-	    		data: JSON.parse(JSON.stringify(line.userData))
+	    		data: JSON.parse(JSON.stringify(userData))
 	    	})
-    	} else if (intersects[0] && intersects[0].object && intersects[0].object.object && intersects[0].object.object.userData && intersects[0].object.object.userData.type === 'drawRect') {
+    	} else if (intersects[0] && intersects[0].object && intersects[0].object.object && intersects[0].object.object.userData && intersects[0].object.object.userData.type) {
     		// 点击的是之前绘制的矩形框
     		let rectData = intersects[0].object.object
     		// 将自己添加的矩形框的世界坐标转换为当前所对应的屏幕坐标
@@ -590,10 +606,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 				y: rectData.userData.drawRectWorldCoord.endY,
 				z: 0
 			}
-    		rectData.userData.drawRectScreenCoord.startX = scope.pointToScreenPosition(start).x
-			rectData.userData.drawRectScreenCoord.startY = scope.pointToScreenPosition(start).y
-			rectData.userData.drawRectScreenCoord.endX = scope.pointToScreenPosition(end).x
-			rectData.userData.drawRectScreenCoord.endY = scope.pointToScreenPosition(end).y
+    		rectData.userData.drawRectScreenCoord.startX = controls.pointToScreenPosition(start).x
+			rectData.userData.drawRectScreenCoord.startY = controls.pointToScreenPosition(start).y
+			rectData.userData.drawRectScreenCoord.endX = controls.pointToScreenPosition(end).x
+			rectData.userData.drawRectScreenCoord.endY = controls.pointToScreenPosition(end).y
     		
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
@@ -613,53 +629,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	    		data: JSON.parse(JSON.stringify(i))
 	    	})
     	}
-    }
-    // 三维坐标转屏幕坐标
-	this.pointToScreenPosition = function (coord) {
-		var v4 = new THREE.Vector4()
-	    v4.x = coord.x
-	    v4.y = coord.y
-	    v4.z = 0
-	    v4.w = 1
-	    v4.applyMatrix4(camera.matrixWorldInverse) //逆矩阵
-	    v4.applyMatrix4(camera.projectionMatrix) //投影矩阵
-	    v4.x = v4.x / v4.w
-	    v4.y = v4.y / v4.w
-	    v4.z = v4.z / v4.w
-	    v4.x = v4.x * 0.5 + 0.5
-	    v4.y = v4.y * 0.5 + 0.5
-	    v4.z = v4.z * 0.5 + 0.5
-	    v4.x = v4.x * screenData.canvasWidth
-//	    v4.x = v4.x * 1920
-	    v4.y = (1 - v4.y) * screenData.canvasHeight
-//	    v4.y = (1 - v4.y) * 1080
-	    return v4
-	}
-    // 计算所选中的自己添加的矩形框里面的所有构件
-    function updateRectSelected(data){
-    	let arr = []
-    	let minx = data.startX < data.endX ? data.startX : data.endX
-    	let miny = data.startY < data.endY ? data.startY : data.endY
-    	let maxx = data.startX < data.endX ? data.endX : data.startX
-    	let maxy = data.startY < data.endY ? data.endY : data.startY
-    	// 为了加快查找进度，根据选择范围动态更改选点间距
-    	let differenceX = Math.ceil((maxx - minx) / 20)
-    	let differenceY = Math.ceil((maxy - miny) / 20)
-    	for (let i = minx; i <= maxx; i = i + differenceX) {
-    		for (let j = miny; j <= maxy; j = j + differenceY) {
-    			let obj = {
-    				x: i,
-    				y: j
-    			}
-    			arr.push(obj)
-    		}
-    	}
-    	
-    	let selectArr = []
-    	arr.forEach((item,index) => {
-    		selectArr = selectArr.concat(selectedUuidByScreenCoord(item))
-    	})
-    	return selectArr
     }
 	// 修改
 	this.changeLineControls = function (dims, changeWidth, changeHeight, changeCamera, changeParent, changeScene){
@@ -685,14 +654,14 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		INTERSECTEDFIRST = null
 		/**
 		 * 根据包围盒画出来最大点与最小点
-		var rectShape = new THREE.Shape();
+		let rectShape = new THREE.Shape();
         rectShape.moveTo(dims.min.x,dims.min.y);
         rectShape.lineTo(dims.max.x,dims.max.y);
-        var points = rectShape.getPoints();
-        var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
+        let points = rectShape.getPoints();
+        let geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
         
         // 这两行是绘制的虚线
-        var line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
+        let line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         line.computeLineDistances()
         
     	line.name = 'drawRectCallback'
@@ -703,20 +672,69 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	// 重新绘制矩形框
 	this.drawRectInitData = function (el){
 		let data = el.coordinate.drawRectWorldCoord
-		
-		var geometry = new THREE.PlaneBufferGeometry( Math.abs(data.endX - data.startX), Math.abs(data.endY - data.startY), 1, 1 );
+		switch (el.coordinate.type){
+			case 'drawRectType':
+				// 绘制矩形框
+				drawRectBox(data, el)
+				break;
+			case 'drawCloudType':
+				// 绘制云线
+				drawCloudBox(data, el)
+				break;
+			case 'drawPlaneType':
+				// 绘制平面
+				drawPlaneBox(data, el)
+				break;
+			default:
+				// 绘制平面
+				drawRectBox(data, el)
+				break;
+		}
+		renderer.render(scene,camera)
+	}
+	
+	// 绘制矩形框
+	function drawRectBox(data, el){
+		// 给定两个对角点的坐标绘制虚线矩形框
+		let rectShape = new THREE.Shape();
+        rectShape.moveTo(data.startX,data.startY);
+        rectShape.lineTo(data.startX,data.endY);
+        rectShape.lineTo(data.endX,data.endY);
+        rectShape.lineTo(data.endX,data.startY);
+        rectShape.lineTo(data.startX,data.startY);
+        let points = rectShape.getPoints();
+        let geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
+        let line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], linewidth: 1}));
+        // 矩形虚线框
+        // let line = new THREE.Line( geometryPoints, new THREE.LineDashedMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
+        // line.computeLineDistances()
+        
+        if (el && el.dxfAnnotationId) {
+    		// 给自己绘制的矩形添加特殊标识
+            line.name = el.dxfAnnotationId
+            line.userData = el.coordinate
+    	} else {
+    		line.name = 'rect_move'
+    	}
+		scene.add( line );
+	}
+	
+	// 绘制平面
+	function drawPlaneBox(data, el){
+		// 给定两个对角点的坐标绘制平面
+		let geometry = new THREE.PlaneBufferGeometry( Math.abs(data.endX - data.startX), Math.abs(data.endY - data.startY), 1, 1 );
 		//类型数组创建顶点位置position数据
-		var vertices = new Float32Array([
+		let vertices = new Float32Array([
 		  data.startX,data.startY, 0, //顶点1坐标
 		  data.endX,data.startY, 0, //顶点2坐标
 		  data.endX,data.endY, 0, //顶点3坐标
 		  data.startX,data.endY, 0, //顶点6坐标
 		]);
 		// 创建属性缓冲区对象
-		var attribue = new THREE.BufferAttribute(vertices, 3); //3个为一组
+		let attribue = new THREE.BufferAttribute(vertices, 3); //3个为一组
 		// 设置几何体attributes属性的位置position属性
 		geometry.attributes.position = attribue
-		var normals = new Float32Array([
+		let normals = new Float32Array([
 		  0, 0, 1, //顶点1法向量
 		  0, 0, 1, //顶点2法向量
 		  0, 0, 1, //顶点3法向量
@@ -725,7 +743,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		// 设置几何体attributes属性的位置normal属性
 		geometry.attributes.normal = new THREE.BufferAttribute(normals, 3); //3个为一组,表示一个顶点的xyz坐标
 		// Uint16Array类型数组创建顶点索引数据
-		var indexes = new Uint16Array([
+		let indexes = new Uint16Array([
 		  // 0对应第1个顶点位置数据、第1个顶点法向量数据
 		  // 1对应第2个顶点位置数据、第2个顶点法向量数据
 		  // 索引值3个为一组，表示一个三角形的3个顶点
@@ -735,44 +753,242 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		// 索引数据赋值给几何体的index属性
 		geometry.index = new THREE.BufferAttribute(indexes, 1); //1个为一组
 		
-		var material = new THREE.MeshBasicMaterial( {color: 0x409EFF, transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
-		var plane = new THREE.Mesh( geometry, material );
-		if (plane) {
+		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
+		let plane = new THREE.Mesh( geometry, material );
+		if (el && el.dxfAnnotationId) {
     		// 给自己绘制的矩形添加特殊标识
             plane.name = el.dxfAnnotationId
             plane.userData = el.coordinate
-            scene.add( plane );
+    	} else {
+    		plane.name = 'plane_move'
     	}
-		
-		
-		
-		/*
-		var rectShape = new THREE.Shape();
-        rectShape.moveTo(data.startX,data.startY);
-        rectShape.lineTo(data.startX,data.endY);
-        rectShape.lineTo(data.endX,data.endY);
-        rectShape.lineTo(data.endX,data.startY);
-        rectShape.lineTo(data.startX,data.startY);
-        
-//      let linewidth = 0.01
-//      rectShape.lineTo(data.startX - linewidth,data.startY - linewidth);
-//      rectShape.lineTo(data.startX - linewidth,data.endY - linewidth);
-//      rectShape.lineTo(data.endX + linewidth,data.endY - linewidth);
-//      rectShape.lineTo(data.endX + linewidth,data.startY + linewidth);
-//      rectShape.lineTo(data.startX - linewidth,data.startY + linewidth);
-        
-        var points = rectShape.getPoints();
-        var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-        var line = new THREE.Line( geometryPoints, new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
-        
-        if (line) {
-    		// 给自己绘制的矩形添加特殊标识
-            line.name = el.dxfAnnotationId
-            line.userData = el.coordinate
-            line.computeLineDistances()
-            scene.add( line );
+		scene.add( plane );
+	}
+	
+	// 绘制云线
+	function drawCloudBox(data, el){
+		// 重置所有顶点的数据
+		let pointData = []
+		// 清空之前的所有顶点
+        bezierCurveArr = []
+		// start代表的是左上角，end代表的是右下角
+		let startX, startY, endX, endY
+        if (data.startX < data.endX) {
+        	startX = data.startX
+        	endX = data.endX
+        } else{
+        	startX = data.endX
+        	endX = data.startX
+        }
+        if (data.startY > data.endY) {
+        	startY = data.startY
+        	endY = data.endY
+        } else{
+        	startY = data.endY
+        	endY = data.startY
+        }
+		upLine(startX, startY, endX, endY)
+        rightLine(startX, startY, endX, endY)
+        downLine(startX, startY, endX, endY)
+        leftLine(startX, startY, endX, endY)
+        // 遍历绘制云线
+        bezierCurveArr.forEach((item,index) => {
+        	pointData = pointData.concat(getBezierCurvePoint(item))
+        })
+        drawBezierCurve(pointData, el)
+	}
+	
+	function upLine(px, py, mx, my){
+		let one = Math.abs((mx - px) / bezierCurveLength)
+		for (let i = 0; i < one; i++) {
+			let obj = {}
+			if (mx - (px + bezierCurveLength * i) < bezierCurveLength) {
+				// 最后一点
+				obj.startPoint = {
+					x: px + bezierCurveLength * i,
+					y: py,
+					z: 0
+				}
+				obj.endPoint = {
+					x: mx,
+					y: py,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: (px + bezierCurveLength * i) + ((mx - (px + bezierCurveLength * i)) / 2),
+					y: py + bezierCurveHeight,
+					z: 0
+				}
+			} else {
+				obj.startPoint = {
+					x: px + bezierCurveLength * i,
+					y: py,
+					z: 0
+				}
+				obj.endPoint = {
+					x: px + bezierCurveLength * (i + 1),
+					y: py,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: px + bezierCurveLength * (i + 0.5),
+					y: py + bezierCurveHeight,
+					z: 0
+				}
+			}
+			bezierCurveArr.push(obj)
+		}
+	}
+	
+	function rightLine(px, py, mx, my){
+		let one = Math.abs((my - py) / bezierCurveLength)
+		for (let i = 0; i < one; i++) {
+			let obj = {}
+			if (py - (my + bezierCurveLength * i) < bezierCurveLength) {
+				// 最后一点
+				obj.startPoint = {
+					x: mx,
+					y: py - bezierCurveLength * i,
+					z: 0
+				}
+				obj.endPoint = {
+					x: mx,
+					y: my,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: mx + bezierCurveHeight,
+					y: my + (((py - bezierCurveLength * i) - my) / 2),
+					z: 0
+				}
+			} else {
+				obj.startPoint = {
+					x: mx,
+					y: py - bezierCurveLength * i,
+					z: 0
+				}
+				obj.endPoint = {
+					x: mx,
+					y: py - bezierCurveLength * (i + 1),
+					z: 0
+				}
+				obj.middlePoint = {
+					x: mx + bezierCurveHeight,
+					y: py - bezierCurveLength * (i + 0.5),
+					z: 0
+				}
+			}
+			bezierCurveArr.push(obj)
+		}
+	}
+	
+	function downLine(px, py, mx, my){
+		let one = Math.abs((mx - px) / bezierCurveLength)
+		for (let i = 0; i < one; i++) {
+			let obj = {}
+			if (mx - (px + bezierCurveLength * i) < bezierCurveLength) {
+				// 最后一点
+				obj.startPoint = {
+					x: mx - bezierCurveLength * i,
+					y: my,
+					z: 0
+				}
+				obj.endPoint = {
+					x: px,
+					y: my,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: px + (((mx - bezierCurveLength * i) - px) / 2),
+					y: my - bezierCurveHeight,
+					z: 0
+				}
+			} else {
+				obj.startPoint = {
+					x: mx - bezierCurveLength * i,
+					y: my,
+					z: 0
+				}
+				obj.endPoint = {
+					x: mx - bezierCurveLength * (i + 1),
+					y: my,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: mx - bezierCurveLength * (i + 0.5),
+					y: my - bezierCurveHeight,
+					z: 0
+				}
+			}
+			bezierCurveArr.push(obj)
+		}
+	}
+	
+	function leftLine(px, py, mx, my){
+		let one = Math.abs((my - py) / bezierCurveLength)
+		for (let i = 0; i < one; i++) {
+			let obj = {}
+			if (py - (my + bezierCurveLength * i) < bezierCurveLength) {
+				// 最后一点
+				obj.startPoint = {
+					x: px,
+					y: my + bezierCurveLength * i,
+					z: 0
+				}
+				obj.endPoint = {
+					x: px,
+					y: py,
+					z: 0
+				}
+				obj.middlePoint = {
+					x: px - bezierCurveHeight,
+					y: py - ((py - (my + bezierCurveLength * i)) / 2),
+					z: 0
+				}
+			} else {
+				obj.startPoint = {
+					x: px,
+					y: my + bezierCurveLength * i,
+					z: 0
+				}
+				obj.endPoint = {
+					x: px,
+					y: my + bezierCurveLength * (i + 1),
+					z: 0
+				}
+				obj.middlePoint = {
+					x: px - bezierCurveHeight,
+					y: my + bezierCurveLength * (i + 0.5),
+					z: 0
+				}
+			}
+			bezierCurveArr.push(obj)
+		}
+	}
+	
+	function getBezierCurvePoint(data){
+		let curve = new THREE.QuadraticBezierCurve3(
+			new THREE.Vector3( data.startPoint.x, data.startPoint.y, data.startPoint.z ),
+			new THREE.Vector3( data.middlePoint.x, data.middlePoint.y, data.middlePoint.z ),
+			new THREE.Vector3( data.endPoint.x, data.endPoint.y, data.endPoint.z )
+		);
+		let points = curve.getPoints( 50 )
+		return points
+	}
+	
+	function drawBezierCurve(pointData, el){
+		let geometry = new THREE.BufferGeometry().setFromPoints(pointData)
+		let material = new THREE.LineBasicMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], linewidth: 1 })
+		// Create the final object to add to the scene
+		let curveObject = new THREE.Line(geometry, material)
+		if (el && el.dxfAnnotationId) {
+			// 之前的云线框
+			curveObject.name = el.dxfAnnotationId
+            curveObject.userData = el.coordinate
+		} else {
+    		curveObject.name = 'cloud_move'
     	}
-    	*/
+		scene.add(curveObject)
 	}
 	
 	// 外部调用绘制面积，距离，角度，周长
@@ -820,13 +1036,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                             INTERSECTEDFIRST = INTERSECTED;
                             INTERSECTED = null;
                             //改变物体的颜色(红色)
-                            INTERSECTEDFIRST.material.color.set( 0x409EFF );
+                            INTERSECTEDFIRST.material.color.set( roleColorData[0] );
                             renderer.render(scene,camera);
                         }
                     }
                     
                     // 判断当选中了自己绘制的矩形的时候右键弹出删除按钮
-                    if (INTERSECTEDFIRST && INTERSECTEDFIRST.userData && INTERSECTEDFIRST.userData.type === 'drawRect') {
+                    if (INTERSECTEDFIRST && INTERSECTEDFIRST.userData && INTERSECTEDFIRST.userData.type) {
                     	listBox.style.display = 'block';//右键点击时显示菜单框
                     	listBox.style.left = x + 'px';
                     	listBox.style.top = y + 'px';
@@ -849,11 +1065,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                         INTERSECTEDFIRST = INTERSECTED;
                         INTERSECTED = null;
                         //改变物体的颜色(红色)
-                        INTERSECTEDFIRST.material.color.set( 0x409EFF );
+                        INTERSECTEDFIRST.material.color.set( roleColorData[0] );
                         renderer.render(scene,camera);
                         
                         // 判断当选中了自己绘制的矩形的时候右键弹出删除按钮
-                        if (INTERSECTEDFIRST && INTERSECTEDFIRST.userData && INTERSECTEDFIRST.userData.type === 'drawRect') {
+                        if (INTERSECTEDFIRST && INTERSECTEDFIRST.userData && INTERSECTEDFIRST.userData.type) {
                         	listBox.style.display = 'block';//右键点击时显示菜单框
                         	listBox.style.left = x + 'px';
                         	listBox.style.top = y + 'px';
@@ -923,12 +1139,44 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     //绘制矩形功能开关
     drawRectBtn.onclick = function(){
         if (drawRectBtn.className.indexOf('off') > -1){
-            drawRectBtn.className = "el-button on el-button--default is-plain dxf-el-button";
-            drawRectBtn.innerText = "关闭批注";
+            drawRectBtn.className = "iconfont on dxf-el-button icon-xiankuang1";
+            // drawRectBtn.innerText = "关闭批注";
             fsm.drawRect();
         } else {
-            drawRectBtn.className = "el-button off el-button--default is-plain dxf-el-button";
-            drawRectBtn.innerText = "开启批注";
+            drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
+            // drawRectBtn.innerText = "开启批注";
+            if (scene.getObjectByName('line_move')) {
+                scene.remove(scene.getObjectByName('line_move'));
+                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
+                pointsArray.shift();
+            }
+            renderer.render(scene,camera);
+            fsm.highlight();
+        }
+    };
+    //绘制云线框功能开关
+    drawCloudBtn.onclick = function(){
+        if (drawCloudBtn.className.indexOf('off') > -1){
+            drawCloudBtn.className = "iconfont on dxf-el-button icon-yunxian";
+            fsm.drawCloud();
+        } else {
+            drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
+            if (scene.getObjectByName('line_move')) {
+                scene.remove(scene.getObjectByName('line_move'));
+                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
+                pointsArray.shift();
+            }
+            renderer.render(scene,camera);
+            fsm.highlight();
+        }
+    };
+    // 绘制平面功能开关
+    drawPlaneBtn.onclick = function(){
+        if (drawPlaneBtn.className.indexOf('off') > -1){
+            drawPlaneBtn.className = "iconfont on dxf-el-button icon-xiankuang";
+            fsm.drawPlane();
+        } else {
+            drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
             if (scene.getObjectByName('line_move')) {
                 scene.remove(scene.getObjectByName('line_move'));
                 /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
