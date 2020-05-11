@@ -14,7 +14,8 @@
 
 ## 使用例子
 
-`let parser = new DxfParser()
+```javascript
+let parser = new DxfParser()
 let dxfData = parser.parseSync('拿到的dxf文件数据')
 
 // helvetiker_regular.typeface.json 代表的是json格式的字体库数据
@@ -25,4 +26,5 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 	let cadCanvas = new Viewer(dxfData, document.getElementById('cad-view'), width, height, response, (dxfCallback) => {
 		console.log(dxfCallback, '用户操作之后的回调函数')
 	})
-})`
+})
+```
