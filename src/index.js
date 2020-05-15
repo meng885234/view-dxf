@@ -97,6 +97,7 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
 
 // 记录角色所对应的颜色值
 let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#FC0261' ]
+let dxfLineTextColor = [ '#000000' ]
 
 function Viewer(data, parent, width, height, font, dxfCallback) {
 	
@@ -231,7 +232,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	    }
     	
     	_this.onWindowResize(recordWidth, recordHeight)
-    	_this.render()
     	
     	if (maxI < data.entities.length) {
     		setTimeout(() => {
@@ -337,9 +337,67 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	LineControl.commonDxfDrawEvent(type, callback)
     }
 	
+	
+	
+	
+	
+	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置
+	this.changeProjectionMatrix = function (val){
+		
+//		let dw = recordHeight * 1920 / 1080
+		let dw = recordWidth
+		let dh = recordHeight
+		
+		let x1 = mapNumRange(0, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
+		let x2 = mapNumRange(dw, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
+		let dx = (x2 - x1) / 2
+		let y1 = mapNumRange(0, val.minPositiony, val.maxPositiony, dims.min.y, dims.max.y)
+		let y2 = mapNumRange(dh, val.minPositiony, val.maxPositiony, dims.min.y, dims.max.y)
+		let dy = (y2 - y1) / 2
+		
+		if ((dx / dy) < dw / dh) {
+			dx = dw * (dy / dh)
+		} else{
+			dy = dw * (dx / dh)
+			// dy = dh * (dx / dw)
+		}
+		
+		let wx = (dims.max.x + dims.min.x) / 2
+		let wy = (dims.max.y + dims.min.y) / 2
+		
+//		let wx = (val.minPositionx + val.maxPositionx) / 2
+//		let wy = (val.minPositiony + val.maxPositiony) / 2
+		
+		camera.left = -dx
+		camera.right = dx
+		camera.top = dy
+		camera.bottom = -dy
+		
+		// camera.setViewOffset(dw, dh, wx, wy, dw, dh)
+		// camera.lookAt(new THREE.Vector3(wx, wy, 0))
+		
+//      camera.position.x = wx
+//      camera.position.y = wy
+        
+        camera.position.set(wx, wy, ZONE_ENTITIES)
+		
+		camera.updateProjectionMatrix()
+		
+		camera.updateMatrixWorld()
+		
+		console.log(val, dims, x1, x2, dx, y1, y2, dy, camera, wx, wy, '-------------------------x1')
+		this.render()
+	}
+	function mapNumRange(num, inMin, inMax, outMin, outMax){
+		return (((num - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin)
+	}
+	
+	
+	
+	
+	
 	// 重置相机位置
 	this.onWindowResize = function (changeWidth, changeHeight) {
-		
 		recordWidth = changeWidth
 		recordHeight = changeHeight
 		
@@ -434,6 +492,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
                 y: center.y
             }
         };
+        
+        // var camera = new THREE.PerspectiveCamera(45, width / height, 0.001, 10000);
+        // camera.lookAt(new THREE.Vector3(viewPort.center.x, viewPort.center.y, 0));
+        
         var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 10000);
         camera.position.z = ZONE_ENTITIES;
         camera.position.x = viewPort.center.x;
@@ -445,20 +507,27 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(entity.type === 'CIRCLE' || entity.type === 'ARC') {
             mesh = drawArc(entity, data);
         } else if(entity.type === 'LWPOLYLINE' || entity.type === 'LINE' || entity.type === 'POLYLINE') {
+        	// 黑色
             mesh = drawLine(entity, data);
         } else if(entity.type === 'TEXT') {
+        	// 黑色
             mesh = drawText(entity, data);
         } else if(entity.type === 'SOLID') {
+        	// 黑色
             mesh = drawSolid(entity, data);
         } else if(entity.type === 'POINT') {
+        	// 黑色
             mesh = drawPoint(entity, data);
         } else if(entity.type === 'INSERT') {
             mesh = drawBlock(entity, data);
         } else if(entity.type === 'SPLINE') {
+        	// 黑色
             mesh = drawSpline(entity, data);
         } else if(entity.type === 'MTEXT') {
+        	// 黑色
             mesh = drawMtext(entity, data);
         } else if(entity.type === 'ELLIPSE') {
+        	// 黑色
             mesh = drawEllipse(entity, data);
         } else {
             console.log("Unsupported Entity Type: " + entity.type);
@@ -483,7 +552,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 
         var points = curve.getPoints( 50 );
         var geometry = new THREE.BufferGeometry().setFromPoints( points );
-        var material = new THREE.LineBasicMaterial( {  linewidth: 1, color : color } );
+        
+        var material = new THREE.LineBasicMaterial( {  linewidth: 1, color : dxfLineTextColor[0] || color } );
 
         // Create the final object to add to the scene
         var ellipse = new THREE.Line( geometry, material );
@@ -498,7 +568,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
             size: entity.height * (4/5),
             height: 1
         });
-        var material = new THREE.MeshBasicMaterial( {color: color} );
+        
+        var material = new THREE.MeshBasicMaterial( {color: dxfLineTextColor[0] || color} );
+        
         var text = new THREE.Mesh( geometry, material );
 
         // Measure what we rendered.
@@ -599,7 +671,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         }
 
         var geometry = new THREE.BufferGeometry().setFromPoints( interpolatedPoints );
-        var material = new THREE.LineBasicMaterial( { linewidth: 1, color : color } );
+        
+        var material = new THREE.LineBasicMaterial( { linewidth: 1, color : dxfLineTextColor[0] || color } );
+        
         var splineObject = new THREE.Line( geometry, material );
 
         return splineObject;
@@ -639,7 +713,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(lineType && lineType.pattern && lineType.pattern.length !== 0) {
             material = new THREE.LineDashedMaterial({ color: color, gapSize: 4, dashSize: 4});
         } else {
-            material = new THREE.LineBasicMaterial({ linewidth: 1, color: color });
+            material = new THREE.LineBasicMaterial({ linewidth: 1, color: dxfLineTextColor[0] || color });
         }
 
         // if(lineType && lineType.pattern && lineType.pattern.length !== 0) {
@@ -721,8 +795,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
             geometry.faces.push(new THREE.Face3(1, 3, 2));
         }
 
-
-        material = new THREE.MeshBasicMaterial({ color: getColor(entity, data) });
+        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
 
         return new THREE.Mesh(geometry, material);
         
@@ -736,7 +809,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         
         geometry = new THREE.TextGeometry(entity.text, { font: font, height: 0, size: entity.textHeight || 12 });
 
-        material = new THREE.MeshBasicMaterial({ color: getColor(entity, data) });
+        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
 
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.startPoint.x;
@@ -766,7 +839,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         geometry.colors = colors;
         geometry.computeBoundingBox();
 
-        material = new THREE.PointsMaterial( { size: 0.05, vertexColors: THREE.VertexColors } );
+        material = new THREE.PointsMaterial( { size: 0.05, vertexColors: dxfLineTextColor[0] || THREE.VertexColors } );
+        
         point = new THREE.Points(geometry, material);
         scene.add(point);
     }
