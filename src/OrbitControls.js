@@ -259,7 +259,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 			scope.screenData.minScreenCoord = scope.pointToScreenPosition(scope.screenData.minCoordinate)
 			scope.screenData.maxScreenCoord = scope.pointToScreenPosition(scope.screenData.maxCoordinate)
 			// 添加标识，标识是首次加载完成
-			if (val) {
+			if (val == 'dxfDrawLoadingFinished') {
 				scope.screenData.type = val
 			}
 			dxfCallback({
@@ -293,7 +293,9 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 	this.update = function (val) {
 		// 实时计算当前最大与最小的屏幕坐标
-		scope.updateScreenPosition(val)
+		if (val !== 'modelToDxf') {
+			scope.updateScreenPosition(val)
+		}
 		
         if(scope.object.top !== undefined) {
             this.object.top = (scale*this.object.top);
@@ -305,9 +307,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
         }
             
-
-		var position = this.object.position;
-
+        var position = this.object.position;
 		offset.copy( position ).sub( this.target );
 //
 //		// angle from z-axis around y-axis
@@ -339,6 +339,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 //		radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
 //		
 //		// move target to panned location
+
 		this.target.add( pan );
 //		
 //		offset.x = radius * Math.sin( phi ) * Math.sin( theta );

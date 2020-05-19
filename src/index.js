@@ -344,9 +344,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置
 	this.changeProjectionMatrix = function (val){
 		
-//		let dw = recordHeight * 1920 / 1080
-		let dw = recordWidth
-		let dh = recordHeight
+		let dw = 1080 * recordWidth / recordHeight
+		let dh = 1080
 		
 		let x1 = mapNumRange(0, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
 		let x2 = mapNumRange(dw, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
@@ -358,35 +357,30 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		if ((dx / dy) < dw / dh) {
 			dx = dw * (dy / dh)
 		} else{
-			dy = dw * (dx / dh)
-			// dy = dh * (dx / dw)
+			dy = dh * (dx / dw)
 		}
 		
-		let wx = (dims.max.x + dims.min.x) / 2
-		let wy = (dims.max.y + dims.min.y) / 2
+		let sx = (val.minPositionx + val.maxPositionx) / 2
+		let sy = (val.minPositiony + val.maxPositiony) / 2
 		
-//		let wx = (val.minPositionx + val.maxPositionx) / 2
-//		let wy = (val.minPositiony + val.maxPositiony) / 2
+		let a = 1.0
+		camera.left = -dx * a
+		camera.right = dx * a
+		camera.top = dy * a
+		camera.bottom = -dy * a
 		
-		camera.left = -dx
-		camera.right = dx
-		camera.top = dy
-		camera.bottom = -dy
-		
-		// camera.setViewOffset(dw, dh, wx, wy, dw, dh)
-		// camera.lookAt(new THREE.Vector3(wx, wy, 0))
-		
-//      camera.position.x = wx
-//      camera.position.y = wy
-        
-        camera.position.set(wx, wy, ZONE_ENTITIES)
-		
-		camera.updateProjectionMatrix()
-		
-		camera.updateMatrixWorld()
-		
-		console.log(val, dims, x1, x2, dx, y1, y2, dy, camera, wx, wy, '-------------------------x1')
-		this.render()
+		let screenValue = {
+			minCoordinate: dims.min,
+			maxCoordinate: dims.max,
+			canvasWidth: dw,
+			canvasHeight: dh
+		}
+		let dMin = controls.pointToScreenPosition(dims.min, screenValue)
+		let dMax = controls.pointToScreenPosition(dims.max, screenValue)
+		let mx = (dMin.x + dMax.x) / 2
+		let my = (dMin.y + dMax.y) / 2
+		controls.pan(((sx - mx) * recordWidth / dw) + (val.offsetX * (1 - recordWidth / dw)), (sy - my) * recordHeight / dh)
+		controls.update('modelToDxf')
 	}
 	function mapNumRange(num, inMin, inMax, outMin, outMax){
 		return (((num - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin)
