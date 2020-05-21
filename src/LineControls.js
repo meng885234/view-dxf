@@ -28,9 +28,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     var deleteLine = document.getElementById("delete");
     var listBox = document.getElementById('dxfOperateList');//获取自定义右键菜单
     var drawLineBtn = document.getElementById("drawLineId");
-    var drawRectBtn = document.getElementById("drawRectId");
-    var drawCloudBtn = document.getElementById("drawCloudId");
-    var drawPlaneBtn = document.getElementById("drawPlaneId");
     var isDrawing = false;
     
     let drawRectScreenCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的屏幕坐标
@@ -38,12 +35,32 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
     let screenValue = {};
     let scope = this;
+    let drawBtnIdArr = [ 'drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId']
 
     function activate() {
         deleteLine.addEventListener("click",deleteOneLine,false);
         parent.addEventListener( 'mousemove', onDocumentMouseMove, false );
         parent.addEventListener( 'mousedown', onDocumentMouseDown, false );
         parent.addEventListener( 'mouseup', onDocumentMouseUp, false );
+        
+        // 添加按钮的点击事件
+        drawBtnIdArr.forEach((item,index) => {
+        	let elementNode = document.getElementById(item)
+        	let elementEvent = item.slice(0, -2)
+        	elementNode.onclick = function(){
+		        if (elementNode.className.indexOf('off') > -1){
+		        	// elementNode.innerText = "开启啦"
+		        	elementNode.classList.remove('off')
+					elementNode.classList.add('on')
+		            fsm[elementEvent]()
+		        } else {
+		        	// elementNode.innerText = "关闭啦"
+		        	elementNode.classList.remove('on')
+					elementNode.classList.add('off')
+		            fsm.highlight();
+		        }
+		    };
+        })
     }
 
     /**
@@ -59,42 +76,34 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             { name: 'drawLine',		from: '*',	to: 'drawingLine'	},
             { name: 'drawRect', 	from: '*',	to: 'drawingRect'	},
             { name: 'drawCloud', 	from: '*',	to: 'drawingCloud'	},
-            { name: 'drawPlane', 	from: '*',	to: 'drawingPlane'	}
+            { name: 'drawPlane', 	from: '*',	to: 'drawingPlane'	},
+            { name: 'drawArrow', 	from: '*',	to: 'drawingArrow'	}
         ],
         methods: {
+        	onBeforeTransition:function(data){
+        		changeDrawingBtnState(data.transition)
+        	},
             onEnterHighlight:function(){
                 if (INTERSECTEDFIRST) {
                     INTERSECTEDFIRST.material.color.set(INTERSECTEDFIRST.currentHex);//恢复选择前的默认颜色
                     INTERSECTEDFIRST = null;
                     renderer.render(scene,camera);
                 }
-                // 关闭矩形框状态
-                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
-                // 关闭云线状态
-                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
-                // 关闭平面状态
-                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
-            },
-            onEnterDrawingRect:function(){
-                // 关闭云线状态
-                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
-                // 关闭平面状态
-                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
-            },
-            onEnterDrawingCloud:function(){
-                // 关闭矩形框状态
-                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
-                // 关闭平面状态
-                drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
-            },
-            onEnterDrawingPlane:function(){
-                // 关闭矩形框状态
-                drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
-                // 关闭云线状态
-                drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
             }
         }
     });
+
+	// 改变头部按钮的颜色
+	function changeDrawingBtnState(val){
+		drawBtnIdArr.forEach((item,index) => {
+			let elementNode = document.getElementById(item)
+	        let elementEvent = item.slice(0, -2)
+	        if (val !== elementEvent) {
+	        	elementNode.classList.remove('on')
+	        	elementNode.classList.add('off')
+	        }
+		})
+	}
 
     function onDocumentMouseDown(e) {
         switch (fsm.state) {
@@ -142,6 +151,18 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                     isDrawing = true;
                 }
                 break;
+            case 'drawingArrow':
+                var btnNum = e.button;
+                if (btnNum == 0){
+                	// 省的点击取消的时候再删除之前没有保存的批注框了
+            		renderer.render(scene,camera);
+                	// 记录绘制开始点屏幕坐标
+                	drawRectScreenCoord.startX = event.clientX
+                	drawRectScreenCoord.startY = event.clientY
+                    vectorRect = getIntersects(e);
+                    isDrawing = true;
+                }
+                break;
         }
     }
 
@@ -164,6 +185,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 break;
             case 'drawingPlane':
                 drawPlaneOnMove(e);
+                break;
+            case 'drawingArrow':
+                drawArrowOnMove(e);
                 break;
         }
     }
@@ -188,6 +212,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 break;
             case 'drawingPlane':
                 drawPlaneEnd(event);
+                isDrawing = false;
+                break;
+            case 'drawingArrow':
+                drawArrowEnd(event);
                 isDrawing = false;
                 break;
         }
@@ -508,7 +536,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 scene.remove(scene.getObjectByName('cloud_move'));
             }
             computeStartEnd(event)
-            boundingClientRect = event.target.getBoundingClientRect();
         	// 批注框选-传入屏幕坐标，后端计算
         	sendSelectedModelId([], 'drawCloudType')
         }
@@ -533,9 +560,44 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 scene.remove(scene.getObjectByName('plane_move'));
             }
             computeStartEnd(event)
-            boundingClientRect = event.target.getBoundingClientRect();
         	// 批注框选-传入屏幕坐标，后端计算
         	sendSelectedModelId([], 'drawPlaneType')
+        }
+    }
+    // 绘制箭头
+    function drawArrowOnMove(event){
+        if (isDrawing){
+            if (scene.getObjectByName('arrow_move')) {
+                scene.remove(scene.getObjectByName('arrow_move'));
+            }
+            
+            var vector = getIntersects(event);
+        	drawRectWorldCoord.startX = vectorRect.x
+        	drawRectWorldCoord.startY = vectorRect.y
+        	drawRectWorldCoord.endX = vector.x
+        	drawRectWorldCoord.endY = vector.y
+        	
+            // 绘制平面
+			drawArrowBox(drawRectWorldCoord)
+        }
+    }
+    function drawArrowEnd(event) {
+        if (isDrawing){
+        	// 记录绘制矩形的结束点屏幕坐标
+        	drawRectScreenCoord.endX = event.clientX
+            drawRectScreenCoord.endY = event.clientY
+            if (scene.getObjectByName('arrow_move')) {
+                scene.remove(scene.getObjectByName('arrow_move'));
+            }
+            
+            var vector = getIntersects(event);
+        	drawRectWorldCoord.startX = vectorRect.x
+        	drawRectWorldCoord.startY = vectorRect.y
+        	drawRectWorldCoord.endX = vector.x
+        	drawRectWorldCoord.endY = vector.y
+        	
+        	// 批注框选-传入屏幕坐标，后端计算
+        	sendSelectedModelId([], 'drawArrowType')
         }
     }
     
@@ -685,6 +747,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 				// 绘制平面
 				drawPlaneBox(data, el)
 				break;
+			case 'drawArrowType':
+				// 绘制箭头
+				drawArrowBox(data, el)
+				break;
 			default:
 				// 绘制平面
 				drawRectBox(data, el)
@@ -761,6 +827,158 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             plane.userData = el.coordinate
     	} else {
     		plane.name = 'plane_move'
+    	}
+		scene.add( plane );
+	}
+	
+	//获得鼠标位置与X轴正方向之间的夹角,前提是以(mx, my)为原点,下面的mx, my代表的就是原点坐标
+	function computeAngle(px, py, mx, my) {
+        var x = Math.abs(px - mx)
+        var y = Math.abs(py - my)
+        var z = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
+        var sin = y / z
+        //用反三角函数求弧度
+        var radina = Math.asin(sin)
+        //将弧度转换成角度
+        var angle = Math.floor(180 / (Math.PI / radina))
+        //鼠标在x轴正方向上
+        if(mx > px && my == py) {
+            angle = 0
+        }
+        //鼠标在x轴负方向
+        if(mx < px && my == py) {
+            angle = 180
+        }
+        //鼠标在y轴正方向上
+        if(mx == px && my < py) {
+            angle = 270
+        }
+        //鼠标在y轴负方向上
+        if(mx == px && my > py) {
+            angle = 90
+        }
+        //鼠标在第一象限
+        if(mx > px && my < py) {
+            angle = 180 - angle
+        }
+        //鼠标在第二象限
+        if(mx < px && my < py) {
+            angle = angle
+        }
+        //鼠标在第三象限
+        if(mx < px && my > py) {
+            angle = 360 - angle
+        }
+        //鼠标在第四象限
+        if(mx > px && my > py) {
+            angle = 180 + angle
+        }
+        return angle
+    }
+	
+	// 绘制箭头
+	function drawArrowBox(data, el){
+		
+		let angle = computeAngle(data.endX, data.endY, data.startX, data.startY)
+		let angleValue = 1
+		if (angle > 90 && angle < 270) {
+			angleValue = -1
+		} else {
+			angleValue = 1
+		}
+		
+		let nearDistance = 1
+		let farDistance = 2
+		let nearDiff = 0.5
+		let farDiff = 2
+		
+		// 第一象限
+		let x1 = data.startX
+		let y1 = data.startY
+		let x2 = data.endX
+		let y2 = data.endY
+		let k = (y1 - y2) / (x1 - x2)
+		let b = ((x1 * y2) - (x2 * y1)) / (x1 - x2)
+		let A = y2 - y1
+		let B = x1 - x2
+		let C = x2 * y1 - x1 * y2
+		
+		let sinA = (x2 - x1) !== 0 ? Math.abs((y2 - y1) / (x2 - x1)) : 0
+		let cosA = (y2 - y1) !== 0 ? Math.abs((x2 - x1) / (y2 - y1)) : 0
+		
+		if (sinA <= 1) {
+			nearDistance = nearDistance * (1 + Math.pow(sinA, sinA))
+			farDistance = farDistance * (1 + Math.pow(sinA, sinA))
+			nearDiff = nearDiff * sinA
+			farDiff = farDiff * sinA
+		} else{
+			nearDistance = nearDistance * (Math.pow((1 + cosA), cosA) - (1 - cosA)) * (2 - cosA)
+			farDistance = farDistance * (Math.pow((1 + cosA), cosA) - (1 - cosA)) * (2 - cosA)
+			nearDiff = nearDiff * (2 - cosA)
+			farDiff = farDiff * (2 - cosA)
+		}
+		
+		let dx = x2 - nearDistance * angleValue
+		let dy = (-C - A * dx) / B	// 已知dx求dy的值
+		let fx = dx - nearDiff
+		// 已知直线率为k,其垂线过点(dx,dy)  垂线公式为y=-(1/k)(x-dx)+dy
+		let fy = (-1 / k) * (fx - dx) + dy
+		let bx = dx + nearDiff
+		let by = (-1 / k) * (bx - dx) + dy
+		// 之后再把垂线向下平移一点
+		let ex = x2 - farDistance * angleValue
+		let ey = (-C - A * ex) / B
+		let mx = ex - farDiff
+		let my = (-1 / k) * (mx - ex) + ey
+		let nx = ex + farDiff
+		let ny = (-1 / k) * (nx - ex) + ey
+		
+		if ((x2 - x1) === 0 || (y2 - y1) === 0) {
+			return false;
+		}
+		// 给定两个对角点的坐标绘制平面
+		let geometry = new THREE.PlaneBufferGeometry( Math.abs(x2 - x1), Math.abs(y2 - y1), 1, 1 );
+		//类型数组创建顶点位置position数据
+		let vertices = new Float32Array([
+		  x1, y1, 0,
+		  x2, y2, 0,
+		  fx, fy, 0,
+		  mx, my, 0,
+		  bx, by, 0,
+		  nx, ny, 0,
+		]);
+		// 创建属性缓冲区对象
+		let attribue = new THREE.BufferAttribute(vertices, 3); //3个为一组
+		// 设置几何体attributes属性的位置position属性
+		geometry.attributes.position = attribue
+		let normals = new Float32Array([
+		  0, 0, 1,
+		  0, 0, 1,
+		  0, 0, 1,
+		  0, 0, 1,
+		  0, 0, 1,
+		  0, 0, 1,
+		]);
+		// 设置几何体attributes属性的位置normal属性
+		geometry.attributes.normal = new THREE.BufferAttribute(normals, 3); //3个为一组,表示一个顶点的xyz坐标
+		// Uint16Array类型数组创建顶点索引数据
+		let indexes = new Uint16Array([
+			0, 1, 2,
+			1, 2, 3,
+			0, 1, 4,
+			1, 4, 5,
+		])
+		// 索引数据赋值给几何体的index属性
+		geometry.index = new THREE.BufferAttribute(indexes, 1); //3个为一组
+		
+		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
+		let plane = new THREE.Mesh( geometry, material );
+		if (el && el.dxfAnnotationId) {
+    		// 给自己绘制的矩形添加特殊标识
+            plane.name = el.dxfAnnotationId
+            plane.userData = el.coordinate
+    	} else {
+    		plane.name = 'arrow_move'
     	}
 		scene.add( plane );
 	}
@@ -1127,56 +1345,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         }else {
             drawLineBtn.className = "off";
             drawLineBtn.innerText = "line-off";
-            if (scene.getObjectByName('line_move')) {
-                scene.remove(scene.getObjectByName('line_move'));
-                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
-                pointsArray.shift();
-            }
-            renderer.render(scene,camera);
-            fsm.highlight();
-        }
-    };
-    //绘制矩形功能开关
-    drawRectBtn.onclick = function(){
-        if (drawRectBtn.className.indexOf('off') > -1){
-            drawRectBtn.className = "iconfont on dxf-el-button icon-xiankuang1";
-            // drawRectBtn.innerText = "关闭批注";
-            fsm.drawRect();
-        } else {
-            drawRectBtn.className = "iconfont off dxf-el-button icon-xiankuang1";
-            // drawRectBtn.innerText = "开启批注";
-            if (scene.getObjectByName('line_move')) {
-                scene.remove(scene.getObjectByName('line_move'));
-                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
-                pointsArray.shift();
-            }
-            renderer.render(scene,camera);
-            fsm.highlight();
-        }
-    };
-    //绘制云线框功能开关
-    drawCloudBtn.onclick = function(){
-        if (drawCloudBtn.className.indexOf('off') > -1){
-            drawCloudBtn.className = "iconfont on dxf-el-button icon-yunxian";
-            fsm.drawCloud();
-        } else {
-            drawCloudBtn.className = "iconfont off dxf-el-button icon-yunxian";
-            if (scene.getObjectByName('line_move')) {
-                scene.remove(scene.getObjectByName('line_move'));
-                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
-                pointsArray.shift();
-            }
-            renderer.render(scene,camera);
-            fsm.highlight();
-        }
-    };
-    // 绘制平面功能开关
-    drawPlaneBtn.onclick = function(){
-        if (drawPlaneBtn.className.indexOf('off') > -1){
-            drawPlaneBtn.className = "iconfont on dxf-el-button icon-xiankuang";
-            fsm.drawPlane();
-        } else {
-            drawPlaneBtn.className = "iconfont off dxf-el-button icon-xiankuang";
             if (scene.getObjectByName('line_move')) {
                 scene.remove(scene.getObjectByName('line_move'));
                 /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
