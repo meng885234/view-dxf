@@ -649,7 +649,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     			drawRectWorldCoord: JSON.parse(JSON.stringify(drawRectWorldCoord)),
     			type: sign
     		}
-            // 不在这添加，每次绘制会重新请求批注列表，把之前自己绘制的先全部删除，再重新绘制，为了给每个对象添加唯一标识---item.dxfAnnotationId
+            // 不在这添加，每次绘制会重新请求批注列表，把之前自己绘制的先全部删除，再重新绘制，为了给每个对象添加唯一标识---item.annotationId
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
 	    		data: JSON.parse(JSON.stringify(userData))
@@ -775,9 +775,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         // let line = new THREE.Line( geometryPoints, new THREE.LineDashedMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         // line.computeLineDistances()
         
-        if (el && el.dxfAnnotationId) {
+        if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            line.name = el.dxfAnnotationId
+            line.name = el.annotationId
             line.userData = el.coordinate
     	} else {
     		line.name = 'rect_move'
@@ -821,9 +821,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		
 		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
 		let plane = new THREE.Mesh( geometry, material );
-		if (el && el.dxfAnnotationId) {
+		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            plane.name = el.dxfAnnotationId
+            plane.name = el.annotationId
             plane.userData = el.coordinate
     	} else {
     		plane.name = 'plane_move'
@@ -973,9 +973,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		
 		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
 		let plane = new THREE.Mesh( geometry, material );
-		if (el && el.dxfAnnotationId) {
+		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            plane.name = el.dxfAnnotationId
+            plane.name = el.annotationId
             plane.userData = el.coordinate
     	} else {
     		plane.name = 'arrow_move'
@@ -1199,9 +1199,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		let material = new THREE.LineBasicMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], linewidth: 1 })
 		// Create the final object to add to the scene
 		let curveObject = new THREE.Line(geometry, material)
-		if (el && el.dxfAnnotationId) {
+		if (el && el.annotationId) {
 			// 之前的云线框
-			curveObject.name = el.dxfAnnotationId
+			curveObject.name = el.annotationId
             curveObject.userData = el.coordinate
 		} else {
     		curveObject.name = 'cloud_move'
@@ -1245,7 +1245,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 //记录当前的坐标(x轴和y轴)
                 var x = ev.clientX;
                 var y = ev.clientY;
-
                 if (INTERSECTEDFIRST){
 
                     if (INTERSECTEDFIRST != INTERSECTED){
@@ -1323,6 +1322,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     //右键删除线条
     function deleteOneLine(e){
         if (INTERSECTEDFIRST){
+        	
+        	dxfCallback({
+	    		type: 'deleteAnnotationDxf',
+	    		data: JSON.parse(JSON.stringify(INTERSECTEDFIRST.name))
+	    	})
+        	
+        	/*
         	// 同时删除和批注一块的批注问题类型与批注内容详情
         	if (scene.getObjectByName('type' + INTERSECTEDFIRST.name)) {
                 scene.remove(scene.getObjectByName('type' + INTERSECTEDFIRST.name));
@@ -1331,8 +1337,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 scene.remove(scene.getObjectByName('content' + INTERSECTEDFIRST.name));
             }
             scene.remove(INTERSECTEDFIRST);
-            INTERSECTEDFIRST = null;
             renderer.render(scene, camera);
+            */
+            INTERSECTEDFIRST = null;
         }
         listBox.style.display = 'none';
     }

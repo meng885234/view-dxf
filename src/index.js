@@ -247,11 +247,25 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	
     }
     
+    // 根据批注id单条删除dxf批注
+    this.deleteDxfAnnotationCtrl = function (id) {
+    	if (scene.getObjectByName(id)) {
+            scene.remove(scene.getObjectByName(id));
+        }
+    	if (scene.getObjectByName('type' + id)) {
+            scene.remove(scene.getObjectByName('type' + id));
+        }
+    	if (scene.getObjectByName('content' + id)) {
+            scene.remove(scene.getObjectByName('content' + id));
+        }
+        renderer.render(scene, camera);
+    }
+    
     // 添加dxf批注
     this.dxfAnnotationListDrawCtrl = function (list) {
     	list.forEach((item,index) => {
-    		if (scene.getObjectByName(item.dxfAnnotationId)) {
-                scene.remove(scene.getObjectByName(item.dxfAnnotationId))
+    		if (scene.getObjectByName(item.annotationId)) {
+                scene.remove(scene.getObjectByName(item.annotationId))
             }
     		LineControl.drawRectInitData(item)
     		scene.add(drawAnnotationTextType(item))
@@ -272,7 +286,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 1.1;
         text.position.z = entity.z || 0;
-        text.name = 'type' + entity.dxfAnnotationId
+        text.name = 'type' + entity.annotationId
         return text;
     }
     
@@ -287,7 +301,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 2.3;
         text.position.z = entity.z || 0;
-        text.name = 'content' + entity.dxfAnnotationId
+        text.name = 'content' + entity.annotationId
         return text;
     }
     
@@ -296,10 +310,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	for (let i = 0; i < 4; i++) {
     		setTimeout(() => {
     			if (parseInt(i%2) > 0) {
-    				scene.getObjectByName(data.dxfAnnotationId).material.color.set( roleColorData[data.toRole] )
+    				scene.getObjectByName(data.annotationId).material.color.set( roleColorData[data.toRole] )
     				this.render()
     			} else {
-    				scene.getObjectByName(data.dxfAnnotationId).material.color.set( roleColorData[0] )
+    				scene.getObjectByName(data.annotationId).material.color.set( roleColorData[0] )
     				this.render()
     			}
     		}, i * 200)
