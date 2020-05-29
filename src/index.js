@@ -264,12 +264,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     // 添加dxf批注
     this.dxfAnnotationListDrawCtrl = function (list) {
     	list.forEach((item,index) => {
-    		if (scene.getObjectByName(item.annotationId)) {
-                scene.remove(scene.getObjectByName(item.annotationId))
-            }
-    		LineControl.drawRectInitData(item)
-    		scene.add(drawAnnotationTextType(item))
-    		scene.add(drawAnnotationText(item))
+    		if (!(scene.getObjectByName(item.annotationId))) {
+    			LineControl.drawRectInitData(item)
+    			scene.add(drawAnnotationTextType(item))
+    			scene.add(drawAnnotationText(item))
+			}
     	})
     	this.render()
     }
