@@ -514,7 +514,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(entity.type === 'CIRCLE' || entity.type === 'ARC') {
             mesh = drawArc(entity, data);
         } else if(entity.type === 'LWPOLYLINE' || entity.type === 'LINE' || entity.type === 'POLYLINE') {
-        	// 黑色
+        	// 黑色(line的改了一半，带有pattern的是轴网-红线，不带的还是用的原来的材质)
             mesh = drawLine(entity, data);
         } else if(entity.type === 'TEXT') {
         	// 黑色
