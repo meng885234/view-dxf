@@ -30,4 +30,6 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 ```
 
 
-#### 如果使用script标签引入的方式，则运行下webpack --config webpack.config.js即可
+#### 如果使用script标签引入的方式，运行webpack --config webpack.config.js即可
+#### 发布方式：1，进入到view-dxf文件夹。2，执行npm publish
+#### 项目中更新方式：进入目录执行npm update view-dxf --save
