@@ -155,7 +155,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     // OrbitControls记录最大与最小的坐标
     controls.changeOrbitControls(dims, width, height)
     
-    controls.update('dxfDrawLoadingFinished');
+    controls.update();
     
     this.render();
     
@@ -235,14 +235,19 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	
     	if (maxI < data.entities.length) {
     		setTimeout(() => {
+    			// 场景添加进度
+    			dxfCallback({
+    				type: 'sceneAddFinishDxf',
+    				data: ((maxI / data.entities.length) * 100).toFixed(2)
+    			})
     			sceneAddObject(data, maxI)
     		}, 1)
-    	} else {
-	    	// 场景添加完毕
-	    	dxfCallback({
-	    		type: 'sceneAddFinishDxf',
-	    		data: new Date().getTime()
-	    	})
+    	} else{
+    		// 场景添加进度
+			dxfCallback({
+				type: 'sceneAddFinishDxf',
+				data: Number(((maxI / data.entities.length) * 100).toFixed(2))
+			})
     	}
     	
     }
@@ -416,7 +421,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		controls.changeOrbitControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    controls.target.x = camera.position.x;
 	    controls.target.y = camera.position.y;
-	    controls.update('dxfDrawLoadingFinished');
+	    controls.update();
 		
 	    LineControl.changeLineControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    LineControl.LineRender(this.renderer);
@@ -455,8 +460,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	    }
 		
 		scene = new THREE.Scene()
-		
-		controls.update('dxfDrawLoadingFinished')
 		this.render()
 		
 		setTimeout(() => {

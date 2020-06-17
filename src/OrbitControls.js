@@ -258,10 +258,6 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		scope.timeOut = setTimeout(() => {
 			scope.screenData.minScreenCoord = scope.pointToScreenPosition(scope.screenData.minCoordinate)
 			scope.screenData.maxScreenCoord = scope.pointToScreenPosition(scope.screenData.maxCoordinate)
-			// 添加标识，标识是首次加载完成
-			if (val == 'dxfDrawLoadingFinished') {
-				scope.screenData.type = val
-			}
 			dxfCallback({
 	    		type: 'updateScreenPositionDxf',
 	    		data: JSON.parse(JSON.stringify(scope.screenData))
