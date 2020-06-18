@@ -317,10 +317,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             var ray = new THREE.Raycaster();
             ray.setFromCamera( mouse, camera );
             var intersects = ray.intersectObjects(scene.children, true);
+			
+            sendSelectedModelId(JSON.parse(JSON.stringify(intersects)))
+			
             if (intersects.length > 0) {
-            	
-            	sendSelectedModelId(JSON.parse(JSON.stringify(intersects)))
-            	
                 if (INTERSECTEDFIRST != intersects[0].object){
                     if (INTERSECTEDFIRST){
                         INTERSECTEDFIRST.material.color.set(INTERSECTEDFIRST.currentHex);//恢复选择前的默认颜色
@@ -672,7 +672,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 			rectData.userData.drawRectScreenCoord.startY = controls.pointToScreenPosition(start, screenValue).y
 			rectData.userData.drawRectScreenCoord.endX = controls.pointToScreenPosition(end, screenValue).x
 			rectData.userData.drawRectScreenCoord.endY = controls.pointToScreenPosition(end, screenValue).y
-    		
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
 	    		data: JSON.parse(JSON.stringify(rectData))
