@@ -35,13 +35,17 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
     let screenValue = {};
     let scope = this;
-    let drawBtnIdArr = [ 'drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId']
+    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId']
 
     function activate() {
         deleteLine.addEventListener("click",deleteOneLine,false);
         parent.addEventListener( 'mousemove', onDocumentMouseMove, false );
         parent.addEventListener( 'mousedown', onDocumentMouseDown, false );
         parent.addEventListener( 'mouseup', onDocumentMouseUp, false );
+        
+        parent.addEventListener( 'touchstart', onDocumentMouseDown, false );
+		parent.addEventListener( 'touchend', onDocumentMouseUp, false );
+		parent.addEventListener( 'touchmove', onDocumentMouseMove, false );
         
         // 添加按钮的点击事件
         drawBtnIdArr.forEach((item,index) => {
@@ -106,6 +110,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	}
 
     function onDocumentMouseDown(e) {
+    	let btnNum = e.button || 0;
         switch (fsm.state) {
             case 'highlight':
                 selectObject(e);
@@ -116,7 +121,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 drawLineOnClick(e);
                 break;
             case 'drawingRect':
-                var btnNum = e.button;
                 if (btnNum == 0){
                 	// 省的点击取消的时候再删除之前没有保存的批注框了
             		renderer.render(scene,camera);
@@ -128,7 +132,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 }
                 break;
             case 'drawingCloud':
-                var btnNum = e.button;
                 if (btnNum == 0){
                 	// 省的点击取消的时候再删除之前没有保存的批注框了
             		renderer.render(scene,camera);
@@ -140,7 +143,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 }
                 break;
             case 'drawingPlane':
-                var btnNum = e.button;
                 if (btnNum == 0){
                 	// 省的点击取消的时候再删除之前没有保存的批注框了
             		renderer.render(scene,camera);
@@ -152,7 +154,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 }
                 break;
             case 'drawingArrow':
-                var btnNum = e.button;
                 if (btnNum == 0){
                 	// 省的点击取消的时候再删除之前没有保存的批注框了
             		renderer.render(scene,camera);
@@ -1366,6 +1367,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         var rect = event.target.getBoundingClientRect();
         var x = event.clientX - rect.left; //x position within the element.
         var y = event.clientY - rect.top;  //y position within the element.
+        if (event.type.indexOf('touch') != -1) {
+        	x = event.changedTouches[0].clientX - rect.left;
+        	y = event.changedTouches[0].clientY - rect.top;
+        }
         mouse.x = (x / width) * 2 - 1;
         mouse.y = -(y / height) * 2 + 1;
         var vector = new THREE.Vector3(mouse.x, mouse.y, -1);

@@ -29,6 +29,24 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 })
 ```
 
+### 批注模块
+
+按钮功能对应的节点ID:
+	`绘制矩形框：drawRectId
+	绘制云线框：drawCloudId
+	绘制平面框：drawPlaneId
+	绘制箭头：drawArrowId`
+
+## 手机端只使用批注这部分的功能的使用例子
+
+```javascript
+// cad-view代表的是你插入dxf的节点id，width代表显示时的宽，height代表显示时的高
+
+let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, height, {}, (dxfCallback) => {
+	console.log(dxfCallback, '用户操作之后的回调函数')
+})
+```
+
 
 #### 如果使用script标签引入的方式，运行webpack --config webpack.config.js即可
 #### 发布方式：1，进入到view-dxf文件夹。2，执行npm publish

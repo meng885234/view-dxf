@@ -160,8 +160,15 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     this.render();
     
     setTimeout(() => {
-    	// 场景添加对象
-    	mergeDxfBlockLine(data)
+    	if (data && data.entities && data.entities.length > 0) {
+    		// 场景添加对象
+    		mergeDxfBlockLine(data)
+    	} else {
+    		dxfCallback({
+				type: 'sceneAddFinishDxf',
+				data: 100.00
+			})
+    	}
     }, timeOutValue)
     
     // 合并block里面的所有线
@@ -474,7 +481,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         var aspectRatio = width / height;
 
         var upperRightCorner = { x: dims.max.x || ZONE_ENTITIES, y: dims.max.y || ZONE_ENTITIES };
-        var lowerLeftCorner = { x: dims.min.x || ZONE_ENTITIES, y: dims.min.y || ZONE_ENTITIES };
+        var lowerLeftCorner = { x: dims.min.x || -ZONE_ENTITIES, y: dims.min.y || -ZONE_ENTITIES };
 
         // Figure out the current viewport extents
         var vp_width = upperRightCorner.x - lowerLeftCorner.x;
