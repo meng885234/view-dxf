@@ -27,7 +27,6 @@ let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#F
 export default function LineControls(camera,parent,scene,width,height,controls,dxfCallback) {
     var deleteLine = document.getElementById("delete");
     var listBox = document.getElementById('dxfOperateList');//获取自定义右键菜单
-    var drawLineBtn = document.getElementById("drawLineId");
     var isDrawing = false;
     
     let drawRectScreenCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的屏幕坐标
@@ -35,10 +34,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
     let screenValue = {};
     let scope = this;
-    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId']
+    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId', 'drawLineId']
 
     function activate() {
-        deleteLine.addEventListener("click",deleteOneLine,false);
+    	if (deleteLine) {
+    		deleteLine.addEventListener("click",deleteOneLine,false);
+    	}
         parent.addEventListener( 'mousemove', onDocumentMouseMove, false );
         parent.addEventListener( 'mousedown', onDocumentMouseDown, false );
         parent.addEventListener( 'mouseup', onDocumentMouseUp, false );
@@ -50,6 +51,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         // 添加按钮的点击事件
         drawBtnIdArr.forEach((item,index) => {
         	let elementNode = document.getElementById(item)
+        	if (!elementNode) {
+				return true
+			}
         	let elementEvent = item.slice(0, -2)
         	elementNode.onclick = function(){
 		        if (elementNode.className.indexOf('off') > -1){
@@ -63,7 +67,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 					elementNode.classList.add('off')
 		            fsm.highlight();
 		        }
-		    };
+		    }
         })
     }
 
@@ -101,6 +105,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	function changeDrawingBtnState(val){
 		drawBtnIdArr.forEach((item,index) => {
 			let elementNode = document.getElementById(item)
+			if (!elementNode) {
+				return true
+			}
 	        let elementEvent = item.slice(0, -2)
 	        if (val !== elementEvent) {
 	        	elementNode.classList.remove('on')
@@ -443,12 +450,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             window_mouse = false;
             /* 鼠标左键未点击时线段的移动状态 */
             if (scene.getObjectByName('line_move')) {
-                scene.remove(scene.getObjectByName('line_move'));
+                // scene.remove(scene.getObjectByName('line_move'));
                 /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
                 pointsArray.shift();
             }
             renderer.render(scene,camera);
-        }else {
         }
     }
 
@@ -1343,24 +1349,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         }
         listBox.style.display = 'none';
     }
-
-    drawLineBtn.onclick = function(){
-        if (drawLineBtn.className == "off"){
-            drawLineBtn.className = "on";
-            drawLineBtn.innerText = "line-on";
-            fsm.drawLine();
-        }else {
-            drawLineBtn.className = "off";
-            drawLineBtn.innerText = "line-off";
-            if (scene.getObjectByName('line_move')) {
-                scene.remove(scene.getObjectByName('line_move'));
-                /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
-                pointsArray.shift();
-            }
-            renderer.render(scene,camera);
-            fsm.highlight();
-        }
-    };
 
     /* 获取鼠标点击的位置 */
     function getIntersects(event) {

@@ -37,7 +37,7 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 	绘制平面框：drawPlaneId
 	绘制箭头：drawArrowId`
 
-## 手机端只使用批注这部分的功能的使用例子
+### 手机端只使用批注这部分的功能的使用例子
 
 ```javascript
 // cad-view代表的是你插入dxf的节点id，width代表显示时的宽，height代表显示时的高
