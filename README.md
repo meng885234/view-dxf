@@ -136,7 +136,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 
 
 ###### 特殊情况说明：
-* 原生引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.0/dist/index.js" type="text/javascript" charset="utf-8"></script>`
-* 打包方式：进入到view-dxf文件夹,执行webpack --config webpack.config.js
-* 发布方式：进入到view-dxf文件夹,执行npm publish
-* 项目中更新方式：进入目录执行npm update view-dxf --save
+* 引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.0/dist/index.js" type="text/javascript" charset="utf-8"></script>`
+* 打包方式：webpack --config webpack.config.js
+* 发布方式：npm publish
+* 更新方式：npm update view-dxf --save
