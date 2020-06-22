@@ -1,8 +1,8 @@
 # view-dxf
 
 这是一个在线打开dxf图纸的插件，欢迎使用，如有不足，欢迎指正。
-
 持续更新中...
+* 注：支持所有的框架以及原生的引用方式
 
 ## install
 安装方式：`npm install view-dxf --save`
@@ -31,11 +31,98 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 
 ### 批注模块
 
-按钮功能对应的节点ID:
-	`绘制矩形框：drawRectId
-	绘制云线框：drawCloudId
-	绘制平面框：drawPlaneId
-	绘制箭头：drawArrowId`
+###### 1，按钮功能对应的节点ID:
+绘制矩形框：`drawRectId`
+绘制云线框：`drawCloudId`
+绘制平面框：`drawPlaneId`
+绘制箭头：`drawArrowId`
+* eg: `<i id="drawRectId" class="iconfont off dxf-el-button icon-xiankuang1"></i>`
+* 注：必不可少的有两部分：id="drawRectId" class="off"
+* 说明：off为关闭状态时的类名，on为打开状态时的类名
+
+###### 2，查询到的批注列表，在画布上显示所需要的数据格式，以及所需要调用的接口为
+* 数据格式以及最少需要含有的字段
+```javascript
+let data = [{annotationId: 320,	// 批注的唯一标识
+	content: "批注内容详情",
+	coordinate: {
+		drawRectScreenCoord: {
+			startX: 38,
+			startY: 210,
+			endX: 238,
+			endY: 402
+		},
+		drawRectWorldCoord: {
+			startX: -24.88748981868235,
+			startY: 136.64271682686174,
+			endX: 25.490601775931857, 
+			endY: 88.2797488960321
+		},
+		type: "drawCloudType"
+	},	// 批注操作完成之后callback出来的数据，不用处理同步保存就好
+	toRole: 1,	// 角色id，用来区分绘制时的颜色（1:设计人，2:校对人，3:专业负责人，4:审核人，5:审定人）
+	type: 1,	// 问题类型（1:一般问题，2：严重问题）
+}]
+```
+* 调用接口
+```javascript
+cadCanvas.dxfAnnotationListDrawCtrl(data)
+```
+
+###### 3，删除单条批注需要调用的接口
+* 调用接口
+```javascript
+cadCanvas.deleteDxfAnnotationCtrl(annotationId)
+```
+
+###### 4，高亮当前选中的批注需要调用的接口
+* 数据格式以及最少需要含有的字段
+```javascript
+let data = {
+	annotationId: 320,	// 批注的唯一标识
+	toRole: 1,	// 角色id，用来区分绘制时的颜色（1:设计人，2:校对人，3:专业负责人，4:审核人，5:审定人）
+}
+```
+* 调用接口
+```javascript
+cadCanvas.selectedDxfAnnotationCtrl(data)
+```
+
+###### 5，清空画布所需要调用的接口
+* 调用接口
+```javascript
+cadCanvas.sceneRemoveViewer()
+```
+
+###### 6，初始化完成的返回数据
+* 数据格式
+```javascript
+let data = {
+	data: 100.00,
+	type: "sceneAddFinishDxf"
+}
+```
+
+###### 7，批注绘制完成的返回数据
+* 数据格式
+```javascript
+let data = {
+	data: {},	// 和查询批注列表里面的coordinate字段的数据要保持同步
+	type: "selectedComponentDxf"
+}
+```
+
+###### 8，移动缩放之后的返回数据
+* 数据格式
+```javascript
+let data = {
+	data: {},
+	type: "updateScreenPositionDxf"
+}
+```
+
+
+
 
 ### 手机端只使用批注这部分的功能的使用例子
 
@@ -48,6 +135,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 ```
 
 
-#### 如果使用script标签引入的方式，运行webpack --config webpack.config.js即可
-#### 发布方式：1，进入到view-dxf文件夹。2，执行npm publish
-#### 项目中更新方式：进入目录执行npm update view-dxf --save
+###### 特殊情况说明：
+* 如果使用script标签引入的方式，运行webpack --config webpack.config.js即可
+* 发布方式：1，进入到view-dxf文件夹。2，执行npm publish
+* 项目中更新方式：进入目录执行npm update view-dxf --save

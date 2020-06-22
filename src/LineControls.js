@@ -439,7 +439,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	            	}, 100)
 	            }
                 
-                line.name = 'drawRectCallback';
+                line.name = 'line_move';
                 scene.add(line);
                 renderer.render(scene,camera);
             }
@@ -450,7 +450,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
             window_mouse = false;
             /* 鼠标左键未点击时线段的移动状态 */
             if (scene.getObjectByName('line_move')) {
-                // scene.remove(scene.getObjectByName('line_move'));
+                scene.remove(scene.getObjectByName('line_move'));
                 /* 删除数组中的元素，否则的话再次重绘会链接之前的点接着重绘 */
                 pointsArray.shift();
             }
@@ -732,7 +732,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
         let line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         line.computeLineDistances()
         
-    	line.name = 'drawRectCallback'
+    	line.name = 'line_move'
     	scene.add(line)
     	renderer.render(scene,camera)
     	*/
