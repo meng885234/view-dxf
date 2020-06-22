@@ -126,7 +126,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     var renderer = this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
     renderer.setSize(width, height);
     //设置背景色与透明度
-    renderer.setClearColor(0xFFFF00, 0.3);
+    renderer.setClearColor(0xFFFFFF, 0);
 
     renderer.domElement.id = 'dxfCanvasId';
 
