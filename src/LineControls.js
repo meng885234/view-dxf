@@ -198,6 +198,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
                 drawArrowOnMove(e);
                 break;
         }
+        renderer.render(scene,camera);
     }
 
     function onDocumentMouseUp(event) {
@@ -898,7 +899,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 		let nearDiff = 0.5
 		let farDiff = 2
 		
-		// 第一象限
+		/*
+		 * 依据的线性方程的公式有：
+		 * y=kx+b
+		 * Ax+By+C=0
+		 */
 		let x1 = data.startX
 		let y1 = data.startY
 		let x2 = data.endX

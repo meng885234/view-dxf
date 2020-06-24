@@ -55,7 +55,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	this.maxDistance = Infinity;
 
 	// Set to true to disable this control
-	this.noRotate = false;
+	this.noRotate = true;
 	this.rotateSpeed = 1.0;
 
 	// Set to true to disable this control
@@ -77,13 +77,11 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	// The four arrow keys
 	this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
 	
-	// 实时计算屏幕坐标
+	// 实时记录屏幕坐标
 	this.screenData = {};
 	this.timeOut = '';
 
-	////////////
 	// internals
-
 	var scope = this;
 
 	var EPS = 0.000001;
@@ -254,6 +252,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	}
 	// 实时计算并更新最大最小屏幕坐标
 	this.updateScreenPosition = function (val) {
+//		console.log( scope.object, '---------------------------------------------------------查看缩放与偏移系数')
 		clearTimeout(scope.timeOut)
 		scope.timeOut = setTimeout(() => {
 			scope.screenData.minScreenCoord = scope.pointToScreenPosition(scope.screenData.minCoordinate)
@@ -305,58 +304,56 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
             
         var position = this.object.position;
 		offset.copy( position ).sub( this.target );
-//
-//		// angle from z-axis around y-axis
-//
-//		var theta = Math.atan2( offset.x, offset.z );
-//
-//		// angle from y-axis
-//
-//		var phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
-//
-//		if ( this.autoRotate ) {
-//
-//			this.rotateLeft( getAutoRotationAngle() );
-//
-//		}
-//
-//		theta += thetaDelta;
-//		phi += phiDelta;
-//
-//		// restrict phi to be between desired limits
-//		phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, phi ) );
-//
-//		// restrict phi to be betwee EPS and PI-EPS
-//		phi = Math.max( EPS, Math.min( Math.PI - EPS, phi ) );
-//
-//		var radius = offset.length() * scale;
-//
-//		// restrict radius to be between desired limits
-//		radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
-//		
-//		// move target to panned location
+		// angle from z-axis around y-axis
+
+		var theta = Math.atan2( offset.x, offset.z );
+
+		// angle from y-axis
+
+		var phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
+
+		if ( this.autoRotate ) {
+
+			this.rotateLeft( getAutoRotationAngle() );
+
+		}
+
+		theta += thetaDelta;
+		phi += phiDelta;
+
+		// restrict phi to be between desired limits
+		phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, phi ) );
+
+		// restrict phi to be betwee EPS and PI-EPS
+		phi = Math.max( EPS, Math.min( Math.PI - EPS, phi ) );
+
+		var radius = offset.length() * scale;
+
+		// restrict radius to be between desired limits
+		radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
+		
+		// move target to panned location
 
 		this.target.add( pan );
-//		
-//		offset.x = radius * Math.sin( phi ) * Math.sin( theta );
-//		offset.y = radius * Math.cos( phi );
-//		offset.z = radius * Math.sin( phi ) * Math.cos( theta );
-//
+		
+		offset.x = radius * Math.sin( phi ) * Math.sin( theta );
+		offset.y = radius * Math.cos( phi );
+		offset.z = radius * Math.sin( phi ) * Math.cos( theta );
 		position.copy( this.target ).add( offset );
 
 		this.object.lookAt( this.target );
 
 
-//		if ( lastPosition.distanceTo( this.object.position ) > 0 || scale !== 1 ) {
+		if ( lastPosition.distanceTo( this.object.position ) > 0 || scale !== 1 ) {
 
 			this.dispatchEvent( changeEvent );
 
-//			lastPosition.copy( this.object.position );
+			lastPosition.copy( this.object.position );
 
-//		}
+		}
         
-//        thetaDelta = 0;
-//		phiDelta = 0;
+        thetaDelta = 0;
+		phiDelta = 0;
 		scale = 1;
 		pan.set( 0, 0, 0 );
 

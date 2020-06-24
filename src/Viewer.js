@@ -241,6 +241,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	
     	_this.onWindowResize(recordWidth, recordHeight)
     	
+    	// console.log(window.performance, '-------------------------------------window.performance.memory')
+    	
     	if (maxI < data.entities.length) {
     		setTimeout(() => {
     			// 场景添加进度
@@ -279,8 +281,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	list.forEach((item,index) => {
     		if (!(scene.getObjectByName(item.annotationId))) {
     			LineControl.drawRectInitData(item)
-    			scene.add(drawAnnotationTextType(item))
-    			scene.add(drawAnnotationText(item))
+    			if (item.type) {
+    				scene.add(drawAnnotationTextType(item))
+    			}
+    			if (item.content) {
+    				scene.add(drawAnnotationText(item))
+    			}
 			}
     	})
     	this.render()
