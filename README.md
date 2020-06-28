@@ -125,7 +125,13 @@ let data = {
 * 数据格式
 ```javascript
 let data = {
-	data: {},
+	data: {
+		moveAndZoom: {
+			offsetX: 0,		// X轴偏移量
+			offsetY: 0,		// Y轴偏移量
+			rorate: 1		// 画布缩放大小，1为不放大也没缩小
+		}
+	},
 	type: "updateScreenPositionDxf"
 }
 ```
