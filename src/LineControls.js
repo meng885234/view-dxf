@@ -117,6 +117,14 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
 	}
 
     function onDocumentMouseDown(e) {
+    	
+    	// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移了
+    	if (fsm.state == 'highlight') {
+    		controls.noPan = false
+    	} else{
+    		controls.noPan = true
+    	}
+    	
     	let btnNum = e.button || 0;
         switch (fsm.state) {
             case 'highlight':

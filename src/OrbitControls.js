@@ -77,9 +77,29 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	// The four arrow keys
 	this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
 	
-	// 实时记录屏幕坐标
-	this.screenData = {};
-	this.timeOut = '';
+	
+	
+	// 实时记录屏幕坐标以及平移缩放参数
+	let screenData = {
+		moveAndZoom: {
+			offsetX: 0,
+			offsetY: 0,
+			rorate: 1
+		}
+	}
+	// 定时器
+	let timeOut = ''
+	// 记录屏幕坐标(0,0)点刚开始对应的世界坐标
+	let originPoint = {clientX: 0, clientY: 0}
+	// 记录初始化的时候屏幕坐标(0,0)所对应的世界坐标
+	let originPointStart = ''
+	// 找两点来确定缩放系数
+	let firstPoint = {x: 10, y: 10}
+	let secondPoint = {x: 0, y: 0}
+	// 记录初始化的时候上面两点所对应的屏幕坐标的距离
+	let startDistance = 0
+
+
 
 	// internals
 	var scope = this;
@@ -245,21 +265,36 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 			scene = null
 			scene = changeScene
 		}
-		scope.screenData.minCoordinate = dims.min
-		scope.screenData.maxCoordinate = dims.max
-		scope.screenData.canvasWidth = changeWidth
-		scope.screenData.canvasHeight = changeHeight
+		screenData.minCoordinate = dims.min
+		screenData.maxCoordinate = dims.max
+		screenData.canvasWidth = changeWidth
+		screenData.canvasHeight = changeHeight
 	}
 	// 实时计算并更新最大最小屏幕坐标
 	this.updateScreenPosition = function (val) {
-//		console.log( scope.object, '---------------------------------------------------------查看缩放与偏移系数')
-		clearTimeout(scope.timeOut)
-		scope.timeOut = setTimeout(() => {
-			scope.screenData.minScreenCoord = scope.pointToScreenPosition(scope.screenData.minCoordinate)
-			scope.screenData.maxScreenCoord = scope.pointToScreenPosition(scope.screenData.maxCoordinate)
+		clearTimeout(timeOut)
+		timeOut = setTimeout(() => {
+			// 计算偏移量
+			if (!originPointStart) {
+				originPointStart = getIntersects(originPoint)
+			}
+			let originPointEnd = scope.pointToScreenPosition(originPointStart, screenData)
+			screenData.moveAndZoom.offsetX = originPointEnd.x - originPoint.clientX
+			screenData.moveAndZoom.offsetY = originPointEnd.y - originPoint.clientY
+			// 计算缩放量
+			let first = scope.pointToScreenPosition(firstPoint, screenData)
+			let second = scope.pointToScreenPosition(secondPoint, screenData)
+			if (!startDistance) {
+				startDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
+			}
+			let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
+			screenData.moveAndZoom.rorate = endDistance / startDistance
+			
+			screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate)
+			screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate)
 			dxfCallback({
 	    		type: 'updateScreenPositionDxf',
-	    		data: JSON.parse(JSON.stringify(scope.screenData))
+	    		data: JSON.parse(JSON.stringify(screenData))
 	    	})
 		}, 100)
 	};
@@ -279,12 +314,24 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	    v4.x = v4.x * 0.5 + 0.5
 	    v4.y = v4.y * 0.5 + 0.5
 	    v4.z = v4.z * 0.5 + 0.5
-//	    v4.x = v4.x * scope.screenData.canvasWidth
+//	    v4.x = v4.x * screenData.canvasWidth
 	    v4.x = v4.x * (screenValue ? screenValue.canvasWidth : 1920)
-//	    v4.y = (1 - v4.y) * scope.screenData.canvasHeight
+//	    v4.y = (1 - v4.y) * screenData.canvasHeight
 	    v4.y = (1 - v4.y) * (screenValue ? screenValue.canvasHeight : 1080)
 	    return v4
 	};
+	
+	// 屏幕坐标转三维坐标
+	function getIntersects(event) {
+        var x = event.clientX; //x position within the element.
+        var y = event.clientY;  //y position within the element.
+        let mouseX = (x / screenData.canvasWidth) * 2 - 1;
+        let mouseY = -(y / screenData.canvasHeight) * 2 + 1;
+        var vector = new THREE.Vector3(mouseX, mouseY, -1);
+        vector.unproject(scope.object);
+        /* 返回向量 */
+        return vector;
+    }
 
 	this.update = function (val) {
 		// 实时计算当前最大与最小的屏幕坐标
@@ -557,7 +604,18 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 		switch ( event.touches.length ) {
 
-			case 1:	// one-fingered touch: rotate
+			case 1:	
+			
+				// 一指和三指都变为平移
+				if ( scope.noPan === true ) return;
+
+				state = STATE.TOUCH_PAN;
+
+				panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+				break;
+				
+				
+				// one-fingered touch: rotate
 
 				if ( scope.noRotate === true ) return;
 
@@ -608,7 +666,29 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 		switch ( event.touches.length ) {
 
-			case 1: // one-fingered touch: rotate
+			case 1: 
+				
+				// 一指和三指都变为平移
+				
+				// three-fingered touch: pan
+
+				if ( scope.noPan === true ) return;
+				if ( state !== STATE.TOUCH_PAN ) return;
+
+				panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+				panDelta.subVectors( panEnd, panStart );
+				
+				scope.pan( panDelta.x, panDelta.y );
+
+				panStart.copy( panEnd );
+
+				scope.update();
+				break;
+			
+			
+			
+			
+				// one-fingered touch: rotate
 
 				if ( scope.noRotate === true ) return;
 				if ( state !== STATE.TOUCH_ROTATE ) return;
