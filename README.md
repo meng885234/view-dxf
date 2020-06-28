@@ -139,7 +139,7 @@ let data = {
 
 
 
-### 手机端只使用批注这部分的功能的使用例子
+### 移动端只使用批注这部分的功能的使用例子
 
 ```javascript
 // cad-view代表的是你插入dxf的节点id，width代表显示时的宽，height代表显示时的高
@@ -148,6 +148,11 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 	console.log(dxfCallback, '用户操作之后的回调函数')
 })
 ```
+
+### 移动端操作方式说明
+1，如若在绘制状态，单指即为绘制，否则就是平移
+2，双指表示缩放
+3，三指表示平移
 
 
 ###### 特殊情况说明：
