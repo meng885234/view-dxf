@@ -44,7 +44,7 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 * 数据格式以及最少需要含有的字段
 ```javascript
 let data = [{annotationId: 320,	// 批注的唯一标识
-	content: "批注内容详情",		// ---如果只是使用批注框，这个参数不要传
+	content: "批注内容详情",		// ---如果只是使用批注模块，这个参数不要传
 	coordinate: {
 		drawRectScreenCoord: {
 			startX: 38,
@@ -60,8 +60,8 @@ let data = [{annotationId: 320,	// 批注的唯一标识
 		},
 		type: "drawCloudType"
 	},	// 批注操作完成之后callback出来的数据，不用处理同步保存就好
-	type: 1,    // 问题类型（1:一般问题，2：严重问题）---如果只是使用批注框，这个参数不要传
-	toRole: 1	// 角色id，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）
+	type: 1,    // 问题类型（1:一般问题，2：严重问题）---如果只是使用批注模块，这个参数不要传
+	toRole: 1	// 角色，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）
 }]
 ```
 * 注：角色所对应的颜色值
@@ -86,7 +86,7 @@ cadCanvas.deleteDxfAnnotationCtrl(annotationId)
 ```javascript
 let data = {
 	annotationId: 320,	// 批注的唯一标识
-	toRole: 1,	// 角色id，用来区分绘制时的颜色（1:设计人，2:校对人，3:专业负责人，4:审核人，5:审定人）
+	toRole: 1,	// 角色，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）
 }
 ```
 * 调用接口
