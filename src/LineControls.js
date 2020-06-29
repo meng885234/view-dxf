@@ -22,7 +22,7 @@ let bezierCurveHeight = 3
 let bezierCurveArr = []
 
 // 记录角色所对应的颜色值
-let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#FC0261' ]
+let roleColorData = [ '#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF' ]
 
 export default function LineControls(camera,parent,scene,width,height,controls,dxfCallback) {
     var deleteLine = document.getElementById("delete");
@@ -121,7 +121,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,d
     	// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移了
     	if (fsm.state == 'highlight') {
     		controls.noPan = false
-    	} else{
+    	} else {
     		controls.noPan = true
     	}
     	

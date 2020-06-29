@@ -96,7 +96,7 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
  */
 
 // 记录角色所对应的颜色值
-let roleColorData = [ '#00ff00', '#A327FF', '#00BFFF', '#FF9200', '#4BE402', '#FC0261' ]
+let roleColorData = [ '#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF' ]
 let dxfLineTextColor = [ '#000000' ]
 
 function Viewer(data, parent, width, height, font, dxfCallback) {
@@ -273,7 +273,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	if (scene.getObjectByName('content' + id)) {
             scene.remove(scene.getObjectByName('content' + id));
         }
-        renderer.render(scene, camera);
+        this.render()
     }
     
     // 添加dxf批注
@@ -458,7 +458,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		    }
 		}
 		this.render()
-		scene = null
 	}
 	
 	// 切换图纸
@@ -472,9 +471,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        min: { x: false, y: false, z: false},
 	        max: { x: false, y: false, z: false}
 	    }
-		
-		scene = new THREE.Scene()
-		this.render()
 		
 		setTimeout(() => {
 	    	// 场景添加对象

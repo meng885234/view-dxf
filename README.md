@@ -44,6 +44,7 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 * 数据格式以及最少需要含有的字段
 ```javascript
 let data = [{annotationId: 320,	// 批注的唯一标识
+	content: "批注内容详情",		// ---如果只是使用批注框，这个参数不要传
 	coordinate: {
 		drawRectScreenCoord: {
 			startX: 38,
@@ -53,21 +54,22 @@ let data = [{annotationId: 320,	// 批注的唯一标识
 		},
 		drawRectWorldCoord: {
 			startX: -24.88748981868235,
-			startY: 136.64271682686174,
-			endX: 25.490601775931857, 
-			endY: 88.2797488960321
+			startY: 26.64271682686174,
+			endX: 25.490601775931857,
+			endY: 48.2797488960321
 		},
 		type: "drawCloudType"
 	},	// 批注操作完成之后callback出来的数据，不用处理同步保存就好
-	toRole: 1	// 角色id，用来区分绘制时的颜色（1:设计人，2:校对人，3:专业负责人，4:审核人，5:审定人）
+	type: 1,    // 问题类型（1:一般问题，2：严重问题）---如果只是使用批注框，这个参数不要传
+	toRole: 1	// 角色id，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）
 }]
 ```
 * 注：角色所对应的颜色值
-	{label: "设计", value: 1, color: '#A327FF'},
-    {label: "校对", value: 2, color: '#00BFFF'},
-    {label: "负责", value: 3, color: '#FF9200'},
-    {label: "审核", value: 4, color: '#4BE402'},
-    {label: "审定", value: 5, color: '#FC0261'},
+	{label: "校对人", value: 1, color: '#0A86FF'},
+    {label: "负责人", value: 2, color: '#FF8100'},
+    {label: "审核人", value: 3, color: '#0AC99A'},
+    {label: "审定人", value: 4, color: '#FC0261'},
+    {label: "设计人", value: 5, color: '#A327FF'},
 * 调用接口
 ```javascript
 cadCanvas.dxfAnnotationListDrawCtrl(data)
