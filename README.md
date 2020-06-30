@@ -138,6 +138,90 @@ let data = {
 }
 ```
 
+###### 9，重新计算当前批注的屏幕位置
+* 数据格式
+```javascript
+let data = {
+	coordinate: {
+		drawRectScreenCoord: {
+			startX: 38,
+			startY: 210,
+			endX: 238,
+			endY: 402
+		},
+		drawRectWorldCoord: {
+			startX: -24.88748981868235,
+			startY: 26.64271682686174,
+			endX: 25.490601775931857,
+			endY: 48.2797488960321
+		},
+		type: "drawCloudType"
+	},	// 还是之前第一次保存之后的callback数据
+}
+```
+* 调用接口
+```javascript
+cadCanvas.pointToScreenPosition(data, (callback) => {
+	console.log(callback)
+})
+```
+
+###### 10,新绘制的批注框与原来绘制的批注框的type都是selectedComponentDxf
+* 新绘制的批注框的callback数据格式
+```javascript
+let data = {
+	type: "selectedComponentDxf",
+	data: {
+		drawRectScreenCoord: {
+			startX: 38,
+			startY: 210,
+			endX: 238,
+			endY: 402
+		},
+		drawRectWorldCoord: {
+			startX: -24.88748981868235,
+			startY: 26.64271682686174,
+			endX: 25.490601775931857,
+			endY: 48.2797488960321
+		},
+		type: "drawCloudType"	// 根据这个type判断是新增批注框，以及批注框的形状
+	}
+}
+```
+* 点击之前绘制的批注框的callback数据格式
+```javascript
+let data = {
+	type: "selectedComponentDxf"
+	data: {
+		name: 341,	// 返回点选的批注框的唯一标识
+		type: "Line",
+		userData: {
+			drawRectScreenCoord: {
+				startX: 38,
+				startY: 210,
+				endX: 238,
+				endY: 402
+			},
+			drawRectWorldCoord: {
+				startX: -24.88748981868235,
+				startY: 26.64271682686174,
+				endX: 25.490601775931857,
+				endY: 48.2797488960321
+			},
+			type: "drawCloudType"	// 根据这个type判断是点选的批注框，以及选中的批注框的形状
+		}
+	}
+}
+```
+
+* eg: data.data.type === 'drawCloudType'  // 如果取到对应值，则代表新增
+* eg: data.data.userData.type === 'drawCloudType'  // 如果取到对应值，则代表点选
+
+###### 11,每次新增之后操作
+* 第一步：保存数据库
+* 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
+
+
 
 
 

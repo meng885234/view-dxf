@@ -299,7 +299,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	    		type: 'updateScreenPositionDxf',
 	    		data: JSON.parse(JSON.stringify(screenData))
 	    	})
-		}, 100)
+		}, 0)
 	};
 	
 	// 三维坐标转屏幕坐标

@@ -26,7 +26,7 @@ let roleColorData = [ '#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A
 
 export default function LineControls(camera,parent,scene,width,height,controls,dxfCallback) {
     var deleteLine = document.getElementById("delete");
-    var listBox = document.getElementById('dxfOperateList');//获取自定义右键菜单
+    var listBox = document.getElementById('dxfOperateList') || {style: {}};//获取自定义右键菜单
     var isDrawing = false;
     
     let drawRectScreenCoord = {startX: 0, startY: 0, endX: 0, endY: 0};	// 记录当前绘制的矩形的屏幕坐标
