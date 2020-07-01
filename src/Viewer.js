@@ -96,8 +96,9 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
  */
 
 // 记录角色所对应的颜色值
-let roleColorData = [ '#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF' ]
-let dxfLineTextColor = [ '#000000' ]
+let questionTypeList = [{label: "一般问题", value: 1}, {label: "严重问题", value: 2}]
+let roleColorData = ['#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF']
+let dxfLineTextColor = ['#000000']
 
 function Viewer(data, parent, width, height, font, dxfCallback) {
 	
@@ -141,7 +142,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     controls.zoomSpeed = 3;
 
 
-    var LineControl = new LineControls(camera,parent,scene,width,height,controls,dxfCallback);
+    var LineControl = new LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback);
     LineControl.LineRender(renderer);
     // LineControls记录最大与最小的坐标
     LineControl.changeLineControls(dims, width, height)
@@ -295,7 +296,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     // 绘制问题类型
     function drawAnnotationTextType(entity) {
         var geometry, material, text;
-        let str = entity.type === 2 ? '严重问题' : '一般问题'
+        let findQuestion = questionTypeList.find(el => el.value == entity.type)
+        let str = findQuestion.label
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         geometry = new THREE.TextGeometry(str, { font: font, height: 1, size: 1});
@@ -339,9 +341,21 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     }
     
     // 外部调用接口-返回当前世界坐标所对应的屏幕坐标
-    this.pointToScreenPosition = function (item, callback) {
-    	// 将自己添加的矩形框的世界坐标转换为当前所对应的屏幕坐标
-		let start = {
+    this.pointToScreenPositionCtrl = function (list, callback) {
+    	if (Object.prototype.toString.call(list) === "[object Array]") {
+			list.forEach((item,index) => {
+				item = pointToScreenPosition(item)
+	    	})
+	    } else if(Object.prototype.toString.call(list)==='[object Object]'){
+	    	list = pointToScreenPosition(list)
+	    } else{
+			console.log('传入的数据格式不对，请重新按照文档整理数据格式')
+	    }
+    	callback(list)
+    }
+    
+    function pointToScreenPosition(item){
+    	let start = {
 			x: item.coordinate.drawRectWorldCoord.startX,
 			y: item.coordinate.drawRectWorldCoord.startY,
 			z: 0
@@ -361,7 +375,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		item.coordinate.drawRectScreenCoord.startY = controls.pointToScreenPosition(start, screenValue).y
 		item.coordinate.drawRectScreenCoord.endX = controls.pointToScreenPosition(end, screenValue).x
 		item.coordinate.drawRectScreenCoord.endY = controls.pointToScreenPosition(end, screenValue).y
-    	callback(item)
+    	return item
     }
     
     // 外部调用接口-返回绘制面积，距离，角度，周长
@@ -444,7 +458,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	}
 	
 	// 清空场景
-	this.sceneRemoveViewer = function () {
+	this.sceneRemoveViewerCtrl = function () {
 		for (let i = scene.children.length - 1; i >= 0; i--) {
 			var myMesh = scene.children[i]
 		    if(myMesh.type === 'Mesh'){

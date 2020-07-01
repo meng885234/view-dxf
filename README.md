@@ -40,6 +40,8 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 * 注：必不可少的有两部分：id="drawRectId" class="off"
 * 说明：off为关闭状态时的类名，on为打开状态时的类名
 
+----
+
 ###### 2，查询到的批注列表，在画布上显示所需要的数据格式，以及所需要调用的接口为
 * 数据格式以及最少需要含有的字段
 ```javascript
@@ -75,11 +77,15 @@ let data = [{annotationId: 320,	// 批注的唯一标识
 cadCanvas.dxfAnnotationListDrawCtrl(data)
 ```
 
+----
+
 ###### 3，删除单条批注需要调用的接口
 * 调用接口
 ```javascript
 cadCanvas.deleteDxfAnnotationCtrl(annotationId)
 ```
+
+----
 
 ###### 4，高亮当前选中的批注需要调用的接口
 * 数据格式以及最少需要含有的字段
@@ -94,11 +100,15 @@ let data = {
 cadCanvas.selectedDxfAnnotationCtrl(data)
 ```
 
+----
+
 ###### 5，清空画布所需要调用的接口
 * 调用接口
 ```javascript
-cadCanvas.sceneRemoveViewer()
+cadCanvas.sceneRemoveViewerCtrl()
 ```
+
+----
 
 ###### 6，初始化完成的返回数据
 * 注：只有初始化完成之后才可以进行批注的增删改查等操作，其中的100.00代表的是初始化的进度到了100%
@@ -109,6 +119,8 @@ let data = {
 	type: "sceneAddFinishDxf"
 }
 ```
+
+----
 
 ###### 7，批注绘制完成的返回数据
 绘制矩形框：`drawRectType`
@@ -122,6 +134,8 @@ let data = {
 	type: "selectedComponentDxf"
 }
 ```
+
+----
 
 ###### 8，移动缩放之后的返回数据
 * 数据格式
@@ -138,10 +152,12 @@ let data = {
 }
 ```
 
+----
+
 ###### 9，重新计算当前批注的屏幕位置
 * 数据格式
 ```javascript
-let data = {
+let data = [{
 	coordinate: {
 		drawRectScreenCoord: {
 			startX: 38,
@@ -157,14 +173,17 @@ let data = {
 		},
 		type: "drawCloudType"
 	},	// 还是之前第一次保存之后的callback数据
-}
+}]
 ```
+* 或者直接传入data[0]也可以，只不过传进去什么，返回什么
 * 调用接口
 ```javascript
-cadCanvas.pointToScreenPosition(data, (callback) => {
+cadCanvas.pointToScreenPositionCtrl(data, (callback) => {
 	console.log(callback)
 })
 ```
+
+----
 
 ###### 10,新绘制的批注框与原来绘制的批注框的type都是selectedComponentDxf
 * 新绘制的批注框的callback数据格式
@@ -217,6 +236,8 @@ let data = {
 * eg: data.data.type === 'drawCloudType'  // 如果取到对应值，则代表新增
 * eg: data.data.userData.type === 'drawCloudType'  // 如果取到对应值，则代表点选
 
+----
+
 ###### 11,每次新增之后操作
 * 第一步：保存数据库
 * 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
@@ -242,7 +263,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 
 
 ###### 特殊情况说明：
-* 引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.0/dist/index.js" type="text/javascript" charset="utf-8"></script>`
+* 引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.6/dist/index.js" type="text/javascript" charset="utf-8"></script>`
 * 打包方式：webpack --config webpack.config.js
 * 发布方式：npm publish
 * 更新方式：npm update view-dxf --save

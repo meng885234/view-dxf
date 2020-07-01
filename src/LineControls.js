@@ -21,10 +21,7 @@ let bezierCurveLength = 2
 let bezierCurveHeight = 3
 let bezierCurveArr = []
 
-// 记录角色所对应的颜色值
-let roleColorData = [ '#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF' ]
-
-export default function LineControls(camera,parent,scene,width,height,controls,dxfCallback) {
+export default function LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback) {
     var deleteLine = document.getElementById("delete");
     var listBox = document.getElementById('dxfOperateList') || {style: {}};//获取自定义右键菜单
     var isDrawing = false;
