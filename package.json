@@ -1,6 +1,6 @@
 {
   "name": "view-dxf",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "DXF drawing online viewer, welcome to use!",
   "main": "dist/index.js",
   "module": "src/index.js",

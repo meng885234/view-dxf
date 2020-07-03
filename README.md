@@ -145,12 +145,13 @@ let data = {
 		moveAndZoom: {
 			offsetX: 0,		// X轴偏移量
 			offsetY: 0,		// Y轴偏移量
-			rorate: 1		// 画布缩放大小，1为不放大也没缩小
+			zoom: 1			// 画布缩放大小，1为不放大也没缩小
 		}
 	},
 	type: "updateScreenPositionDxf"
 }
 ```
+* 注：zoom的值是相对于左上角(0,0)为基点进行缩放的
 
 ----
 

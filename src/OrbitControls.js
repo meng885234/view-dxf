@@ -84,7 +84,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		moveAndZoom: {
 			offsetX: 0,
 			offsetY: 0,
-			rorate: 1
+			zoom: 1
 		}
 	}
 	// 定时器
@@ -291,7 +291,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 				startDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
 			}
 			let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
-			screenData.moveAndZoom.rorate = endDistance / startDistance
+			screenData.moveAndZoom.zoom = endDistance / startDistance
 			
 			screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate)
 			screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate)
