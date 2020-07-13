@@ -252,6 +252,16 @@ let data = {
 * 第一步：保存数据库
 * 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
 
+----
+
+###### 12,手指抬起的callback数据格式：
+```javascript
+let data = {
+	type: "touchendDxf",
+	data: {}
+}
+```
+
 
 
 
@@ -267,8 +277,8 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 ```
 
 ### 移动端操作方式说明
-1，如若在绘制状态，单指即为绘制，否则就是平移
-2，双指表示缩放
+1，如若在批注状态，单指即为绘制，否则就是平移
+2，双指表示缩放(如果打开批注，则不允许缩放)
 3，三指表示平移
 
 
