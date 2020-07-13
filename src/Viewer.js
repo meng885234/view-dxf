@@ -240,7 +240,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        obj = null;
 	    }
     	
-    	_this.onWindowResize(recordWidth, recordHeight)
+    	_this.resetCameraCtrl(recordWidth, recordHeight)
     	
     	// console.log(window.performance, '-------------------------------------window.performance.memory')
     	
@@ -388,7 +388,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	
 	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置
-	this.changeProjectionMatrix = function (val){
+	this.changeProjectionMatrixCtrl = function (val){
 		
 		let dw = 1080 * recordWidth / recordHeight
 		let dh = 1080
@@ -437,7 +437,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	
 	// 重置相机位置
-	this.onWindowResize = function (changeWidth, changeHeight) {
+	this.resetCameraCtrl = function (changeWidth, changeHeight) {
 		recordWidth = changeWidth
 		recordHeight = changeHeight
 		
