@@ -767,12 +767,17 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 	}
 
-	function touchend( /* event */ ) {
+	function touchend(event) {
 
 		if ( scope.enabled === false ) return;
 
 		scope.dispatchEvent( endEvent );
 		state = STATE.NONE;
+		
+		dxfCallback({
+    		type: 'touchendDxf',
+    		data: JSON.parse(JSON.stringify(event))
+    	})
 
 	}
 

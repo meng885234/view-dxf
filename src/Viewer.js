@@ -475,7 +475,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	}
 	
 	// 切换图纸
-	this.sceneAddViewer = function (dxfData, changeWidth, changeHeight) {
+	this.sceneAddDataCtrl = function (dxfData, changeWidth, changeHeight) {
 		
 		recordWidth = changeWidth
 		recordHeight = changeHeight

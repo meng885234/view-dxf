@@ -117,9 +117,15 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     	
     	// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移了
     	if (fsm.state == 'highlight') {
+    		// 打开平移
     		controls.noPan = false
+    		// 打开缩放
+    		controls.noZoom = false
     	} else {
+    		// 关闭平移
     		controls.noPan = true
+    		// 关闭缩放
+    		controls.noZoom = true
     	}
     	
     	let btnNum = e.button || 0;
