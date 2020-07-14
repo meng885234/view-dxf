@@ -31,17 +31,19 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
     let screenValue = {};
     let scope = this;
-    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId', 'drawLineId']
+    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId', 'drawLineId'];
+    // 判断当前设备是否是移动端
+    let isMobile = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i);
 
     function activate() {
     	if (deleteLine) {
     		deleteLine.addEventListener("click",deleteOneLine,false);
     	}
-        parent.addEventListener( 'mousedown', function(){onDocumentMouseDown(event, 'mouse')}, false );
+        parent.addEventListener( 'mousedown', onDocumentMouseDown, false );
         parent.addEventListener( 'mousemove', onDocumentMouseMove, false );
         parent.addEventListener( 'mouseup', onDocumentMouseUp, false );
         
-        parent.addEventListener( 'touchstart', function(){onDocumentMouseDown(event, 'touch')}, false );
+        parent.addEventListener( 'touchstart', onDocumentMouseDown, false );
 		parent.addEventListener( 'touchmove', onDocumentMouseMove, false );
 		parent.addEventListener( 'touchend', onDocumentMouseUp, false );
         
@@ -100,6 +102,21 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 
 	// 改变头部按钮的颜色
 	function changeDrawingBtnState(val){
+		if (isMobile) {
+    		// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移与缩放了
+    		if (val == 'highlight') {
+    			// 打开平移
+    			controls.noPan = false
+    			// 打开缩放
+    			controls.noZoom = false
+    		} else {
+    			// 关闭平移
+    			controls.noPan = true
+    			// 关闭缩放
+    			controls.noZoom = true
+    		}
+    	}
+		
 		drawBtnIdArr.forEach((item,index) => {
 			let elementNode = document.getElementById(item)
 			if (!elementNode) {
@@ -113,22 +130,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		})
 	}
 
-    function onDocumentMouseDown(e, mouseOrTouch) {
-    	if (mouseOrTouch === 'touch') {
-    		// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移与缩放了
-    		if (fsm.state == 'highlight') {
-    			// 打开平移
-    			controls.noPan = false
-    			// 打开缩放
-    			controls.noZoom = false
-    		} else {
-    			// 关闭平移
-    			controls.noPan = true
-    			// 关闭缩放
-    			controls.noZoom = true
-    		}
-    	}
-    	
+    function onDocumentMouseDown(e) {
     	let btnNum = e.button || 0;
     	if (btnNum == 0){
         	// 省的点击取消的时候再删除之前没有保存的批注框了
