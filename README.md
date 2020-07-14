@@ -251,6 +251,7 @@ let data = {
 ###### 11,每次新增之后操作：
 * 第一步：保存数据库
 * 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
+* 第三步：如果未点击保存，或者保存未成功，则需要调用的接口为：cadCanvas.render()
 
 ----
 

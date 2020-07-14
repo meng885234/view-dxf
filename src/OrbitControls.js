@@ -99,7 +99,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	// 记录初始化的时候上面两点所对应的屏幕坐标的距离
 	let startDistance = 0
 	// 添加双指触屏缩放的防抖
-	let antiShakeDistance = 10.0
+	let antiShakeDistance = 30.0
 	let doubleTouchDistance = 0
 
 

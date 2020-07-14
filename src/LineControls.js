@@ -37,13 +37,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     	if (deleteLine) {
     		deleteLine.addEventListener("click",deleteOneLine,false);
     	}
+        parent.addEventListener( 'mousedown', function(){onDocumentMouseDown(event, 'mouse')}, false );
         parent.addEventListener( 'mousemove', onDocumentMouseMove, false );
-        parent.addEventListener( 'mousedown', onDocumentMouseDown, false );
         parent.addEventListener( 'mouseup', onDocumentMouseUp, false );
         
-        parent.addEventListener( 'touchstart', onDocumentMouseDown, false );
-		parent.addEventListener( 'touchend', onDocumentMouseUp, false );
+        parent.addEventListener( 'touchstart', function(){onDocumentMouseDown(event, 'touch')}, false );
 		parent.addEventListener( 'touchmove', onDocumentMouseMove, false );
+		parent.addEventListener( 'touchend', onDocumentMouseUp, false );
         
         // 添加按钮的点击事件
         drawBtnIdArr.forEach((item,index) => {
@@ -113,22 +113,35 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		})
 	}
 
-    function onDocumentMouseDown(e) {
-    	
-    	// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移了
-    	if (fsm.state == 'highlight') {
-    		// 打开平移
-    		controls.noPan = false
-    		// 打开缩放
-    		controls.noZoom = false
-    	} else {
-    		// 关闭平移
-    		controls.noPan = true
-    		// 关闭缩放
-    		controls.noZoom = true
+    function onDocumentMouseDown(e, mouseOrTouch) {
+    	if (mouseOrTouch === 'touch') {
+    		// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移与缩放了
+    		if (fsm.state == 'highlight') {
+    			// 打开平移
+    			controls.noPan = false
+    			// 打开缩放
+    			controls.noZoom = false
+    		} else {
+    			// 关闭平移
+    			controls.noPan = true
+    			// 关闭缩放
+    			controls.noZoom = true
+    		}
     	}
     	
     	let btnNum = e.button || 0;
+    	if (btnNum == 0){
+        	// 省的点击取消的时候再删除之前没有保存的批注框了
+    		renderer.render(scene,camera);
+        	// 记录绘制开始点屏幕坐标
+        	drawRectScreenCoord.startX = e.clientX || e.touches[ 0 ].clientX;
+        	drawRectScreenCoord.startY = e.clientY || e.touches[ 0 ].clientY;
+        	// 记录绘制结束点屏幕坐标
+        	drawRectScreenCoord.endX = e.clientX || e.touches[ 0 ].clientX;
+            drawRectScreenCoord.endY = e.clientY || e.touches[ 0 ].clientY;
+            vectorRect = getIntersects(e);
+        }
+    	
         switch (fsm.state) {
             case 'highlight':
                 selectObject(e);
@@ -140,45 +153,21 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 break;
             case 'drawingRect':
                 if (btnNum == 0){
-                	// 省的点击取消的时候再删除之前没有保存的批注框了
-            		renderer.render(scene,camera);
-                	// 记录绘制开始点屏幕坐标
-                	drawRectScreenCoord.startX = event.clientX
-                	drawRectScreenCoord.startY = event.clientY
-                    vectorRect = getIntersects(e);
                     isDrawing = true;
                 }
                 break;
             case 'drawingCloud':
                 if (btnNum == 0){
-                	// 省的点击取消的时候再删除之前没有保存的批注框了
-            		renderer.render(scene,camera);
-                	// 记录绘制开始点屏幕坐标
-                	drawRectScreenCoord.startX = event.clientX
-                	drawRectScreenCoord.startY = event.clientY
-                    vectorRect = getIntersects(e);
                     isDrawing = true;
                 }
                 break;
             case 'drawingPlane':
                 if (btnNum == 0){
-                	// 省的点击取消的时候再删除之前没有保存的批注框了
-            		renderer.render(scene,camera);
-                	// 记录绘制开始点屏幕坐标
-                	drawRectScreenCoord.startX = event.clientX
-                	drawRectScreenCoord.startY = event.clientY
-                    vectorRect = getIntersects(e);
                     isDrawing = true;
                 }
                 break;
             case 'drawingArrow':
                 if (btnNum == 0){
-                	// 省的点击取消的时候再删除之前没有保存的批注框了
-            		renderer.render(scene,camera);
-                	// 记录绘制开始点屏幕坐标
-                	drawRectScreenCoord.startX = event.clientX
-                	drawRectScreenCoord.startY = event.clientY
-                    vectorRect = getIntersects(e);
                     isDrawing = true;
                 }
                 break;
@@ -186,6 +175,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
 
     function onDocumentMouseMove(e) {
+    	if (isDrawing) {
+    		// 记录绘制结束点屏幕坐标
+        	drawRectScreenCoord.endX = e.clientX || e.touches[ 0 ].clientX;
+            drawRectScreenCoord.endY = e.clientY || e.touches[ 0 ].clientY;
+    	}
         switch (fsm.state) {
             case 'highlight': //高亮状态
                 moveOnDefaultState(e);
@@ -209,7 +203,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 drawArrowOnMove(e);
                 break;
         }
+        
+        // 省的PC端点击取消的时候再删除之前没有保存的批注框了
         renderer.render(scene,camera);
+        
     }
 
     function onDocumentMouseUp(event) {
@@ -513,9 +510,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
     function drawRectangleEnd(event) {
         if (isDrawing){
-        	// 记录绘制矩形的结束点屏幕坐标
-        	drawRectScreenCoord.endX = event.clientX
-            drawRectScreenCoord.endY = event.clientY
             if (scene.getObjectByName('rect_move')) {
                 scene.remove(scene.getObjectByName('rect_move'));
             }
@@ -548,9 +542,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
     function drawCloudEnd(event) {
         if (isDrawing){
-        	// 记录绘制矩形的结束点屏幕坐标
-        	drawRectScreenCoord.endX = event.clientX
-            drawRectScreenCoord.endY = event.clientY
             if (scene.getObjectByName('cloud_move')) {
                 scene.remove(scene.getObjectByName('cloud_move'));
             }
@@ -572,9 +563,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
     function drawPlaneEnd(event) {
         if (isDrawing){
-        	// 记录绘制矩形的结束点屏幕坐标
-        	drawRectScreenCoord.endX = event.clientX
-            drawRectScreenCoord.endY = event.clientY
             if (scene.getObjectByName('plane_move')) {
                 scene.remove(scene.getObjectByName('plane_move'));
             }
@@ -602,9 +590,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
     function drawArrowEnd(event) {
         if (isDrawing){
-        	// 记录绘制矩形的结束点屏幕坐标
-        	drawRectScreenCoord.endX = event.clientX
-            drawRectScreenCoord.endY = event.clientY
             if (scene.getObjectByName('arrow_move')) {
                 scene.remove(scene.getObjectByName('arrow_move'));
             }
@@ -668,7 +653,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     			drawRectWorldCoord: JSON.parse(JSON.stringify(drawRectWorldCoord)),
     			type: sign
     		}
-            // 不在这添加，每次绘制会重新请求批注列表，把之前自己绘制的先全部删除，再重新绘制，为了给每个对象添加唯一标识---item.annotationId
+            // 不在这添加，每次绘制会重新请求批注列表，把新添加的再重新绘制，为了给每个对象添加唯一标识---item.annotationId
 			dxfCallback({
 	    		type: 'selectedComponentDxf',
 	    		data: JSON.parse(JSON.stringify(userData))
