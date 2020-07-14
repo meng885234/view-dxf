@@ -104,7 +104,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	function changeDrawingBtnState(val){
 		if (isMobile) {
     		// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移与缩放了
-    		if (val == 'highlight') {
+    		if (val == 'highlight' || val == 'init') {
     			// 打开平移
     			controls.noPan = false
     			// 打开缩放
