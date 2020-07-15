@@ -36,6 +36,11 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 cadCanvas.sceneAddDataCtrl(dxfData, width, height)
 ```
 
+###### 2，刷新需要调用的接口:
+```javascript
+cadCanvas.render()
+```
+
 
 
 ### 批注模块
@@ -251,7 +256,7 @@ let data = {
 ###### 11,每次新增之后操作：
 * 第一步：保存数据库
 * 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
-* 第三步：如果未点击保存，或者保存未成功，则需要调用的接口为：cadCanvas.render()
+* 第三步：如果未点击保存，或者保存未成功，则需要调用刷新的接口为：cadCanvas.render()
 
 ----
 
@@ -278,7 +283,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 ```
 
 ### 移动端操作方式说明
-1，如若在批注状态，单指即为绘制，否则就是平移
+1，单指表示平移(如果打开批注，则为绘制)
 2，双指表示缩放(如果打开批注，则不允许缩放)
 3，三指表示平移
 

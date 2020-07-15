@@ -242,7 +242,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	
     	_this.resetCameraCtrl(recordWidth, recordHeight)
     	
-    	// console.log(window.performance, '-------------------------------------window.performance.memory')
+    	if (window.performance && window.performance.memory && window.performance.memory.jsHeapSizeLimit) {
+    		let jsHeapSizeLimit = parseInt(window.performance.memory.jsHeapSizeLimit / 1024 / 1024)
+    		let totalJSHeapSize = parseInt(window.performance.memory.totalJSHeapSize / 1024 / 1024)
+    		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
+    		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
+    		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
+    		if (usedJSHeapSize > (jsHeapSizeLimit - 1024)) {
+    			maxI = data.entities.length
+    		}
+    	}
     	
     	if (maxI < data.entities.length) {
     		setTimeout(() => {
@@ -531,7 +540,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         // camera.lookAt(new THREE.Vector3(viewPort.center.x, viewPort.center.y, 0));
         
         var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 10000);
-        camera.position.z = ZONE_ENTITIES;
+        camera.position.z = 10000;
         camera.position.x = viewPort.center.x;
         camera.position.y = viewPort.center.y;
         return camera;
