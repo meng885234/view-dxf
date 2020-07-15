@@ -539,7 +539,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         // var camera = new THREE.PerspectiveCamera(45, width / height, 0.001, 10000);
         // camera.lookAt(new THREE.Vector3(viewPort.center.x, viewPort.center.y, 0));
         
-        var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 10000);
+        var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 100000000);
         camera.position.z = 10000;
         camera.position.x = viewPort.center.x;
         camera.position.y = viewPort.center.y;

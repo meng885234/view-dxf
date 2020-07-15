@@ -389,10 +389,15 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		offset.x = radius * Math.sin( phi ) * Math.sin( theta );
 		offset.y = radius * Math.cos( phi );
 		offset.z = radius * Math.sin( phi ) * Math.cos( theta );
-		position.copy( this.target ).add( offset );
+		
+		
+		// 如果是缩放的话就不修改相机的position的z的值了
+		if (val !== 'zoomUpdate') {
+			position.copy( this.target ).add( offset );
 
-		this.object.lookAt( this.target );
-
+			this.object.lookAt( this.target );
+		}
+		
 
 		if ( lastPosition.distanceTo( this.object.position ) > 0 || scale !== 1 ) {
 
@@ -565,7 +570,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 		}
 
-		scope.update();
+		scope.update('zoomUpdate');
 		scope.dispatchEvent( startEvent );
 		scope.dispatchEvent( endEvent );
 
@@ -741,7 +746,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 
 				dollyStart.copy( dollyEnd );
 
-				scope.update();
+				scope.update('zoomUpdate');
 				break;
 
 			case 3: // three-fingered touch: pan
