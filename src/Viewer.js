@@ -358,7 +358,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	    } else if(Object.prototype.toString.call(list)==='[object Object]'){
 	    	list = pointToScreenPosition(list)
 	    } else{
-			console.log('传入的数据格式不对，请重新按照文档整理数据格式')
+			console.log('传入的数据格式不对，请重新按照开发文档整理数据格式')
 	    }
     	callback(list)
     }
