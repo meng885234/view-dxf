@@ -741,7 +741,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		let data = el.coordinate.drawRectWorldCoord
 		switch (el.coordinate.type){
 			case 'drawRectType':
-				// 绘制矩形框
+				// 绘制矩形
 				drawRectBox(data, el)
 				break;
 			case 'drawCloudType':
