@@ -87,8 +87,6 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 			zoom: 1
 		}
 	}
-	// 定时器
-	let timeOut = ''
 	// 记录屏幕坐标(0,0)点刚开始对应的世界坐标
 	let originPoint = {clientX: 0, clientY: 0}
 	// 记录初始化的时候屏幕坐标(0,0)所对应的世界坐标
@@ -275,31 +273,28 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	}
 	// 实时计算并更新最大最小屏幕坐标
 	this.updateScreenPosition = function (val) {
-		clearTimeout(timeOut)
-		timeOut = setTimeout(() => {
-			// 计算偏移量
-			if (!originPointStart) {
-				originPointStart = getIntersects(originPoint)
-			}
-			let originPointEnd = scope.pointToScreenPosition(originPointStart, screenData)
-			screenData.moveAndZoom.offsetX = originPointEnd.x - originPoint.clientX
-			screenData.moveAndZoom.offsetY = originPointEnd.y - originPoint.clientY
-			// 计算缩放量
-			let first = scope.pointToScreenPosition(firstPoint, screenData)
-			let second = scope.pointToScreenPosition(secondPoint, screenData)
-			if (!startDistance) {
-				startDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
-			}
-			let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
-			screenData.moveAndZoom.zoom = endDistance / startDistance
-			
-			screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate)
-			screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate)
-			dxfCallback({
-	    		type: 'updateScreenPositionDxf',
-	    		data: JSON.parse(JSON.stringify(screenData))
-	    	})
-		}, 0)
+		// 计算偏移量
+		if (!originPointStart) {
+			originPointStart = getIntersects(originPoint)
+		}
+		let originPointEnd = scope.pointToScreenPosition(originPointStart, screenData)
+		screenData.moveAndZoom.offsetX = originPointEnd.x - originPoint.clientX
+		screenData.moveAndZoom.offsetY = originPointEnd.y - originPoint.clientY
+		// 计算缩放量
+		let first = scope.pointToScreenPosition(firstPoint, screenData)
+		let second = scope.pointToScreenPosition(secondPoint, screenData)
+		if (!startDistance) {
+			startDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
+		}
+		let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
+		screenData.moveAndZoom.zoom = endDistance / startDistance
+		
+		screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate)
+		screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate)
+		dxfCallback({
+    		type: 'updateScreenPositionDxf',
+    		data: JSON.parse(JSON.stringify(screenData))
+    	})
 	};
 	
 	// 三维坐标转屏幕坐标

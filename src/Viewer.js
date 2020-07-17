@@ -242,13 +242,14 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	
     	_this.resetCameraCtrl(recordWidth, recordHeight)
     	
+    	// chrome(64位允许使用的最大内存为4G, 32位允许使用的最大内存为1G)
     	if (window.performance && window.performance.memory && window.performance.memory.jsHeapSizeLimit) {
     		let jsHeapSizeLimit = parseInt(window.performance.memory.jsHeapSizeLimit / 1024 / 1024)
     		let totalJSHeapSize = parseInt(window.performance.memory.totalJSHeapSize / 1024 / 1024)
     		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
     		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
     		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
-    		if (usedJSHeapSize > (jsHeapSizeLimit - 1024)) {
+    		if (usedJSHeapSize > (jsHeapSizeLimit - 512)) {
     			maxI = data.entities.length
     		}
     	}
@@ -539,8 +540,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         // var camera = new THREE.PerspectiveCamera(45, width / height, 0.001, 10000);
         // camera.lookAt(new THREE.Vector3(viewPort.center.x, viewPort.center.y, 0));
         
-        var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 100000000);
-        camera.position.z = 10000;
+        var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 0.001, 10000);
+        camera.position.z = 1000;
         camera.position.x = viewPort.center.x;
         camera.position.y = viewPort.center.y;
         return camera;
