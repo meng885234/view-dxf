@@ -721,6 +721,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		INTERSECTEDFIRST = null
 		/**
 		 * 根据包围盒画出来最大点与最小点
+		 * 
 		let rectShape = new THREE.Shape();
         rectShape.moveTo(dims.min.x,dims.min.y);
         rectShape.lineTo(dims.max.x,dims.max.y);
@@ -730,6 +731,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         // 这两行是绘制的虚线
         let line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         line.computeLineDistances()
+        
+        if (scene.getObjectByName('line_move')) {
+            scene.remove(scene.getObjectByName('line_move'));
+        }
         
     	line.name = 'line_move'
     	scene.add(line)
