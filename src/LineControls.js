@@ -18,7 +18,7 @@ let LineControlsCallback = ''	// 绘制面积，距离，角度，周长的回�
 let pointsArrayStr = []			// 记录当前点击的点的集合
 let commonDxfDrawEventType = ''	// 记录外部操作的type
 let bezierCurveLength = 2
-let bezierCurveHeight = 3
+let bezierCurveHeight = 1.2
 let bezierCurveArr = []
 
 export default function LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback) {
