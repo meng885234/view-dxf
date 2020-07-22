@@ -290,6 +290,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 
 ###### 特殊情况说明：
 * 引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.6/dist/index.js" type="text/javascript" charset="utf-8"></script>`
+* 最新的包：https://cdn.jsdelivr.net/npm/view-dxf@latest/dist/index.js
 * 打包方式：webpack --config webpack.config.js
 * 发布方式：npm publish
 * 更新方式：npm update view-dxf --save
