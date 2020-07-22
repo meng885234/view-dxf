@@ -332,11 +332,6 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
     }
 
 	this.update = function (val) {
-		// 实时计算当前最大与最小的屏幕坐标
-		if (val !== 'modelToDxf') {
-			scope.updateScreenPosition(val)
-		}
-		
         if(scope.object.top !== undefined) {
             this.object.top = (scale*this.object.top);
             this.object.bottom = (scale*this.object.bottom);
@@ -407,6 +402,10 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		scale = 1;
 		pan.set( 0, 0, 0 );
 
+		// 实时计算当前最大与最小的屏幕坐标
+		if (val !== 'modelToDxf') {
+			scope.updateScreenPosition(val)
+		}
 	};
 
 

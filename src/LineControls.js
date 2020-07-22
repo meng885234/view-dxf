@@ -130,28 +130,28 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		})
 	}
 
-    function onDocumentMouseDown(e) {
-    	let btnNum = e.button || 0;
+    function onDocumentMouseDown(event) {
+    	let btnNum = event.button || 0;
     	if (btnNum == 0){
         	// 省的点击取消的时候再删除之前没有保存的批注框了
     		renderer.render(scene,camera);
         	// 记录绘制开始点屏幕坐标
-        	drawRectScreenCoord.startX = e.clientX || e.touches[ 0 ].clientX;
-        	drawRectScreenCoord.startY = e.clientY || e.touches[ 0 ].clientY;
+        	drawRectScreenCoord.startX = event.clientX || event.touches[ 0 ].clientX;
+        	drawRectScreenCoord.startY = event.clientY || event.touches[ 0 ].clientY;
         	// 记录绘制结束点屏幕坐标
-        	drawRectScreenCoord.endX = e.clientX || e.touches[ 0 ].clientX;
-            drawRectScreenCoord.endY = e.clientY || e.touches[ 0 ].clientY;
-            vectorRect = getIntersects(e);
+        	drawRectScreenCoord.endX = event.clientX || event.touches[ 0 ].clientX;
+            drawRectScreenCoord.endY = event.clientY || event.touches[ 0 ].clientY;
+            vectorRect = getIntersects(event);
         }
     	
         switch (fsm.state) {
             case 'highlight':
-                selectObject(e);
+                selectObject(event);
                 break;
             case 'selected':
                 break;
             case 'drawingLine':
-                drawLineOnClick(e);
+                drawLineOnClick(event);
                 break;
             case 'drawingRect':
                 if (btnNum == 0){
@@ -176,33 +176,33 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         }
     }
 
-    function onDocumentMouseMove(e) {
+    function onDocumentMouseMove(event) {
     	if (isDrawing) {
     		// 记录绘制结束点屏幕坐标
-        	drawRectScreenCoord.endX = e.clientX || e.touches[ 0 ].clientX;
-            drawRectScreenCoord.endY = e.clientY || e.touches[ 0 ].clientY;
+        	drawRectScreenCoord.endX = event.clientX || event.touches[ 0 ].clientX;
+            drawRectScreenCoord.endY = event.clientY || event.touches[ 0 ].clientY;
     	}
         switch (fsm.state) {
             case 'highlight': //高亮状态
-                moveOnDefaultState(e);
+                moveOnDefaultState(event);
                 break;
             case 'selected':
                 renderer.render( scene, camera );
                 break;
             case 'drawingLine':
-                drawLineOnMove(e);
+                drawLineOnMove(event);
                 break;
             case 'drawingRect':
-                drawRectangleOnMove(e);
+                drawRectangleOnMove(event);
                 break;
             case 'drawingCloud':
-                drawCloudOnMove(e);
+                drawCloudOnMove(event);
                 break;
             case 'drawingPlane':
-                drawPlaneOnMove(e);
+                drawPlaneOnMove(event);
                 break;
             case 'drawingArrow':
-                drawArrowOnMove(e);
+                drawArrowOnMove(event);
                 break;
         }
         
@@ -244,12 +244,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     /**
      * 在默认状态（高亮状态）下
      * 移动鼠标,当鼠标位于图形上时，相应的图形对象高亮显示
-     * @param e
+     * @param event
      */
-    function moveOnDefaultState(e) {
-        var rect = e.target.getBoundingClientRect();
-        var x = e.clientX - rect.left; //x position within the element.
-        var y = e.clientY - rect.top;  //y position within the element.
+    function moveOnDefaultState(event) {
+        var rect = event.target.getBoundingClientRect();
+        var x = event.clientX - rect.left; //x position within the element.
+        var y = event.clientY - rect.top;  //y position within the element.
         mouse.x = (x / width) * 2 - 1;
         mouse.y = -(y / height) * 2 + 1;
 //      var vector = new THREE.Vector3(mouse.x, mouse.y, -1);
@@ -319,15 +319,15 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     /**
      * 点击鼠标左键
      * 选中某个对象，比如线条、矩形
-     * @param e
+     * @param event
      */
-    function selectObject(e) {
-        var btnNum = e.button;
+    function selectObject(event) {
+        var btnNum = event.button;
         if (btnNum == 0){
-            e.preventDefault();
-            var rect = e.target.getBoundingClientRect();
-            var x = e.clientX - rect.left; //x position within the element.
-            var y = e.clientY - rect.top;  //y position within the element.
+            event.preventDefault();
+            var rect = event.target.getBoundingClientRect();
+            var x = event.clientX - rect.left; //x position within the element.
+            var y = event.clientY - rect.top;  //y position within the element.
             mouse.x = (x / width) * 2 - 1;
             mouse.y = -(y / height) * 2 + 1;
 //          var vector = new THREE.Vector3(mouse.x, mouse.y, -1);
@@ -359,7 +359,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                     var dragControls = new THREE.DragControls( objects, camera, renderer.domElement );
                     dragControls.addEventListener( 'dragstart', function ( event ) { controls.enabled = false; } );
                     dragControls.addEventListener( 'dragend', function ( event ) { controls.enabled = true; } );
-                    dragControls.onDocumentMouseDown(e);
+                    dragControls.onDocumentMouseDown(event);
                     */
 
                     camera.dispatchEvent( startEvent );
@@ -382,12 +382,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 
     /**
      * 点击鼠标左键，开始绘制直线
-     * @param e
+     * @param event
      */
-    function drawLineOnClick(e){
-        var btnNum = e.button;
+    function drawLineOnClick(event){
+        var btnNum = event.button;
         if (btnNum == 0){
-            var intersects = getIntersects(e);
+            var intersects = getIntersects(event);
             var vector3_x, vector3_z;
             if (!window_mouse){
                 /* 依据 windwo_mouse 标识避免事件的重复添加 */
@@ -472,10 +472,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 
     /**
      * 在绘制直线的状态下，移动鼠标，在桌面绘制直线
-     * @param e
+     * @param event
      */
-    function drawLineOnMove(e) {
-        var intersects = getIntersects(e);
+    function drawLineOnMove(event) {
+        var intersects = getIntersects(event);
         /* 判断交点是否在 x(-100, 100) ，z(-100, 100)(平面)之间 */
 
         /* 鼠标左键未点击时线段的移动状态 */
@@ -1334,7 +1334,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     this.LineRender = function(render) { renderer = render };
 
     //右键删除线条
-    function deleteOneLine(e){
+    function deleteOneLine(event){
         if (INTERSECTEDFIRST){
         	
         	dxfCallback({
