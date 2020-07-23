@@ -606,8 +606,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 
     function drawMtext(entity, data) {
     	
-    	// 特殊处理格式：\fArial|b0|i0|c134|p34|;1
-    	let entityText = entity.text.replace(/\\fArial.*;/gi, '')
+    	// 特殊处理格式：\fArial|b0|i0|c134|p34|;1     或者     \f仿宋|b0|i0|c134|p49|;H
+    	let entityText = entity.text.replace(/\\f.*;/gi, '')
     	
         var color = getColor(entity, data);
 
@@ -855,8 +855,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         
-        // 特殊处理格式：\fArial|b0|i0|c134|p34|;1
-    	let entityText = entity.text.replace(/\\fArial.*;/gi, '')
+        // 特殊处理格式：\fArial|b0|i0|c134|p34|;1     或者     \f仿宋|b0|i0|c134|p49|;H
+    	let entityText = entity.text.replace(/\\f.*;/gi, '')
         
         geometry = new THREE.TextGeometry(entityText, { font: font, height: 0, size: entity.textHeight || 12 });
 
