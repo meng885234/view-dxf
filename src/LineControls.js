@@ -19,6 +19,7 @@ let pointsArrayStr = []			// 记录当前点击的点的集合
 let commonDxfDrawEventType = ''	// 记录外部操作的type
 let bezierCurveLength = 2
 let bezierCurveHeight = 1.2
+let bezierCurveCircle = 6		// 贝塞尔曲线绘制内切圆的时候两个控制点超出的高度系数
 let bezierCurveArr = []
 
 export default function LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback) {
@@ -31,7 +32,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     let boundingClientRect = {left: 0, top: 0};	// 记录绘制矩形时的值event.target.getBoundingClientRect()
     let screenValue = {};
     let scope = this;
-    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId', 'drawLineId'];
+    let drawBtnIdArr = ['drawRectId', 'drawCloudId', 'drawPlaneId', 'drawArrowId', 'drawEllipseId', 'drawLineId'];
     // 判断当前设备是否是移动端
     let isMobile = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i);
 
@@ -84,7 +85,8 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
             { name: 'drawRect', 	from: '*',	to: 'drawingRect'	},
             { name: 'drawCloud', 	from: '*',	to: 'drawingCloud'	},
             { name: 'drawPlane', 	from: '*',	to: 'drawingPlane'	},
-            { name: 'drawArrow', 	from: '*',	to: 'drawingArrow'	}
+            { name: 'drawArrow', 	from: '*',	to: 'drawingArrow'	},
+            { name: 'drawEllipse', 	from: '*',	to: 'drawingEllipse'}
         ],
         methods: {
         	onBeforeTransition:function(data){
@@ -173,6 +175,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                     isDrawing = true;
                 }
                 break;
+            case 'drawingEllipse':
+                if (btnNum == 0){
+                    isDrawing = true;
+                }
+                break;
         }
     }
 
@@ -203,6 +210,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 break;
             case 'drawingArrow':
                 drawArrowOnMove(event);
+                break;
+            case 'drawingEllipse':
+                drawEllipseOnMove(event);
                 break;
         }
         
@@ -235,6 +245,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 break;
             case 'drawingArrow':
                 drawArrowEnd(event);
+                isDrawing = false;
+                break;
+            case 'drawingEllipse':
+                drawEllipseEnd(event);
                 isDrawing = false;
                 break;
         }
@@ -534,8 +548,8 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     // 绘制云线框
     function drawCloudOnMove(event){
         if (isDrawing){
-            if (scene.getObjectByName('cloud_move')) {
-                scene.remove(scene.getObjectByName('cloud_move'));
+            if (scene.getObjectByName('bezier_curve_move')) {
+                scene.remove(scene.getObjectByName('bezier_curve_move'));
             }
             computeStartEnd(event)
             // 绘制矩形框
@@ -544,8 +558,8 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     }
     function drawCloudEnd(event) {
         if (isDrawing){
-            if (scene.getObjectByName('cloud_move')) {
-                scene.remove(scene.getObjectByName('cloud_move'));
+            if (scene.getObjectByName('bezier_curve_move')) {
+                scene.remove(scene.getObjectByName('bezier_curve_move'));
             }
             computeStartEnd(event)
         	// 批注框选-传入屏幕坐标，后端计算
@@ -604,6 +618,27 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         	
         	// 批注框选-传入屏幕坐标，后端计算
         	sendSelectedModelId([], 'drawArrowType')
+        }
+    }
+    // 绘制椭圆
+    function drawEllipseOnMove(event){
+        if (isDrawing){
+            if (scene.getObjectByName('bezier_curve_move')) {
+                scene.remove(scene.getObjectByName('bezier_curve_move'));
+            }
+            computeStartEnd(event)
+            // 绘制椭圆框
+			drawEllipseBox(drawRectWorldCoord)
+        }
+    }
+    function drawEllipseEnd(event) {
+        if (isDrawing){
+            if (scene.getObjectByName('bezier_curve_move')) {
+                scene.remove(scene.getObjectByName('bezier_curve_move'));
+            }
+            computeStartEnd(event)
+        	// 批注框选-传入屏幕坐标，后端计算
+        	sendSelectedModelId([], 'drawEllipseType')
         }
     }
     
@@ -760,6 +795,10 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 			case 'drawArrowType':
 				// 绘制箭头
 				drawArrowBox(data, el)
+				break;
+			case 'drawEllipseType':
+				// 绘制椭圆
+				drawEllipseBox(data, el)
 				break;
 			default:
 				// 绘制平面
@@ -1198,12 +1237,103 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		}
 	}
 	
-	function getBezierCurvePoint(data){
-		let curve = new THREE.QuadraticBezierCurve3(
-			new THREE.Vector3( data.startPoint.x, data.startPoint.y, data.startPoint.z ),
-			new THREE.Vector3( data.middlePoint.x, data.middlePoint.y, data.middlePoint.z ),
-			new THREE.Vector3( data.endPoint.x, data.endPoint.y, data.endPoint.z )
-		);
+	// 绘制椭圆
+	function drawEllipseBox(data, el){
+		// 重置所有顶点的数据
+		let pointData = []
+		// 清空之前的所有顶点
+        bezierCurveArr = []
+		// start代表的是左上角，end代表的是右下角
+		let startX, startY, endX, endY
+        if (data.startX < data.endX) {
+        	startX = data.startX
+        	endX = data.endX
+        } else{
+        	startX = data.endX
+        	endX = data.startX
+        }
+        if (data.startY > data.endY) {
+        	startY = data.startY
+        	endY = data.endY
+        } else{
+        	startY = data.endY
+        	endY = data.startY
+        }
+		ellipseLine(startX, startY, endX, endY)
+        // 遍历绘制云线
+        bezierCurveArr.forEach((item,index) => {
+        	pointData = pointData.concat(getBezierCurvePoint(item, 'twoControlPoint'))
+        })
+        drawBezierCurve(pointData, el)
+	}
+	
+	function ellipseLine(px, py, mx, my){
+		// 上
+		let up = {}
+		up.startPoint = {
+			x: px,
+			y: (py + my) / 2,
+			z: 0
+		}
+		up.endPoint = {
+			x: mx,
+			y: (py + my) / 2,
+			z: 0
+		}
+		up.firstControlPoint = {
+			x: px,
+			y: py + (py - my) / bezierCurveCircle,
+			z: 0
+		}
+		up.secondControlPoint = {
+			x: mx,
+			y: py + (py - my) / bezierCurveCircle,
+			z: 0
+		}
+		bezierCurveArr.push(up)
+		// 下
+		let down = {}
+		down.startPoint = {
+			x: mx,
+			y: (py + my) / 2,
+			z: 0
+		}
+		down.endPoint = {
+			x: px,
+			y: (py + my) / 2,
+			z: 0
+		}
+		down.firstControlPoint = {
+			x: mx,
+			y: my - (py - my) / bezierCurveCircle,
+			z: 0
+		}
+		down.secondControlPoint = {
+			x: px,
+			y: my - (py - my) / bezierCurveCircle,
+			z: 0
+		}
+		bezierCurveArr.push(down)
+	}
+	
+	function getBezierCurvePoint(data, sign){
+		let curve = ''
+		if (sign == 'twoControlPoint') {
+			// 两个控制点的贝塞尔曲线
+			curve = new THREE.CubicBezierCurve3(
+				new THREE.Vector3( data.startPoint.x, data.startPoint.y, data.startPoint.z ),
+				new THREE.Vector3( data.firstControlPoint.x, data.firstControlPoint.y, data.firstControlPoint.z ),
+				new THREE.Vector3( data.secondControlPoint.x, data.secondControlPoint.y, data.secondControlPoint.z ),
+				new THREE.Vector3( data.endPoint.x, data.endPoint.y, data.endPoint.z )
+			);
+		} else{
+			// 单个控制点的贝塞尔曲线
+			curve = new THREE.QuadraticBezierCurve3(
+				new THREE.Vector3( data.startPoint.x, data.startPoint.y, data.startPoint.z ),
+				new THREE.Vector3( data.middlePoint.x, data.middlePoint.y, data.middlePoint.z ),
+				new THREE.Vector3( data.endPoint.x, data.endPoint.y, data.endPoint.z )
+			);
+		}
 		let points = curve.getPoints( 50 )
 		return points
 	}
@@ -1218,7 +1348,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 			curveObject.name = el.annotationId
             curveObject.userData = el.coordinate
 		} else {
-    		curveObject.name = 'cloud_move'
+    		curveObject.name = 'bezier_curve_move'
     	}
 		scene.add(curveObject)
 	}

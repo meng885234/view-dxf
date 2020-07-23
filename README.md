@@ -50,6 +50,7 @@ cadCanvas.render()
 绘制云线框：`drawCloudId`
 绘制平面框：`drawPlaneId`
 绘制箭头：`drawArrowId`
+绘制椭圆：`drawEllipseId`
 * eg: `<i id="drawRectId" class="iconfont off dxf-el-button icon-xiankuang1"></i>`
 * 注：必不可少的有两部分：id="drawRectId" class="off"
 * 说明：off为关闭状态时的类名，on为打开状态时的类名
@@ -141,6 +142,7 @@ let data = {
 绘制云线框：`drawCloudType`
 绘制平面框：`drawPlaneType`
 绘制箭头：`drawArrowType`
+绘制椭圆：`drawEllipseType`
 * 数据格式
 ```javascript
 let data = {
