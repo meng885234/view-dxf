@@ -33,7 +33,7 @@ loader.load('/static/lib/fonts/helvetiker_regular.typeface.json', (response) => 
 
 ###### 1，切换图纸需要调用的接口:
 ```javascript
-cadCanvas.sceneAddDataCtrl(dxfData, width, height)
+cadCanvas.sceneAddDataCtrl(dxfData)
 ```
 
 ###### 2，刷新需要调用的接口:

@@ -111,6 +111,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	// 记录宽高
 	let recordWidth = width
 	let recordHeight = height
+	// 记录切换图纸之后内存占用的次数
+	let loadDxfRetry = 1
 	
     createLineTypeShaders(data);
 
@@ -469,6 +471,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 清空场景
 	this.sceneRemoveViewerCtrl = function () {
+		/*
 		for (let i = scene.children.length - 1; i >= 0; i--) {
 			var myMesh = scene.children[i]
 		    if(myMesh.type === 'Mesh'){
@@ -481,25 +484,92 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		    	myMesh = null
 		    }
 		}
-		this.render()
+		*/
+		
+		// 从scene中删除模型并释放内存
+		if(scene.children.length > 0){
+			for(var i = 0; i< scene.children.length; i++){
+				var currObj = scene.children[i];
+				
+				// 判断类型
+				if(currObj instanceof THREE.Scene){
+					var children = currObj.children;
+					for(var i = 0; i< children.length; i++){
+						deleteGroup(children[i]);
+					} 
+				}else{ 
+					deleteGroup(currObj);
+				}
+				scene.remove(currObj);
+			}
+		}
+		// 重置scene
+		scene = null
+		loadDxfRetry = 1
+	}
+	
+	// 删除group，释放内存
+	function deleteGroup(group) {
+		//console.log(group);
+		if (!group) return;
+		// 删除掉所有的模型组内的mesh
+		group.traverse(function (item) {
+			if (item instanceof THREE.Mesh) {
+				item.geometry.dispose(); // 删除几何体
+				item.material.dispose(); // 删除材质
+			}
+		});
 	}
 	
 	// 切换图纸
-	this.sceneAddDataCtrl = function (dxfData, changeWidth, changeHeight) {
-		
-		recordWidth = changeWidth
-		recordHeight = changeHeight
-		
+	this.sceneAddDataCtrl = function (dxfData) {
+		data = dxfData
 		// 重置最大最小点
 		dims = {
 	        min: { x: false, y: false, z: false},
 	        max: { x: false, y: false, z: false}
 	    }
 		
-		setTimeout(() => {
-	    	// 场景添加对象
-	    	mergeDxfBlockLine(dxfData)
-	    }, timeOutValue)
+		// chrome(64位允许使用的最大内存为4G, 32位允许使用的最大内存为1G)
+    	if (window.performance && window.performance.memory && window.performance.memory.jsHeapSizeLimit) {
+    		let jsHeapSizeLimit = parseInt(window.performance.memory.jsHeapSizeLimit / 1024 / 1024)
+    		let totalJSHeapSize = parseInt(window.performance.memory.totalJSHeapSize / 1024 / 1024)
+    		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
+    		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
+    		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
+    		if (usedJSHeapSize > (jsHeapSizeLimit - 512)) {
+    			// 尝试10次之后，如果内存还未释放，则直接尝试添加
+    			if (loadDxfRetry > 2) {
+    				loadDxfRetry++
+			    	dxfCallback({
+						type: 'sceneAddFinishDxf',
+						data: 0.00
+					})
+    				setTimeout(() => {
+				    	// 场景添加对象
+				    	scene = new THREE.Scene()
+						this.render()
+				    	mergeDxfBlockLine(data)
+				    }, timeOutValue)
+    			} else{
+    				setTimeout(() => {
+    					this.sceneAddDataCtrl(data)
+    				}, 6000)
+    			}
+    		} else {
+				setTimeout(() => {
+			    	dxfCallback({
+						type: 'sceneAddFinishDxf',
+						data: 0.00
+					})
+			    	// 场景添加对象
+			    	scene = new THREE.Scene()
+			    	this.render()
+			    	mergeDxfBlockLine(data)
+			    }, timeOutValue)
+    		}
+    	}
+		
 	}
 	
     function initCamera(width,height) {
