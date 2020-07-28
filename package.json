@@ -1,6 +1,6 @@
 {
   "name": "view-dxf",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "DXF drawing online viewer, welcome to use!",
   "main": "dist/index.js",
   "module": "src/index.js",
@@ -23,7 +23,7 @@
     "threejs",
     "loveray"
   ],
-  "author": "loveray",
+  "author": "爱心小雷",
   "license": "ISC",
   "dependencies": {
     "dxf-parser": "^1.0.0-alpha.2",

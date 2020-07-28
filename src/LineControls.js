@@ -18,6 +18,8 @@ let LineControlsCallback = ''	// 绘制面积，距离，角度，周长的回�
 let pointsArrayStr = []			// 记录当前点击的点的集合
 let commonDxfDrawEventType = ''	// 记录外部操作的type
 let bezierCurveLength = 2
+let bezierCurveX = 2
+let bezierCurveY = 2
 let bezierCurveHeight = 1.2
 let bezierCurveCircle = 6		// 贝塞尔曲线绘制内切圆的时候两个控制点超出的高度系数
 let bezierCurveArr = []
@@ -1058,6 +1060,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         	startY = data.endY
         	endY = data.startY
         }
+        
+        // 重新计算曲线的宽和高
+        let x = Math.round(Math.abs(endX - startX) / bezierCurveLength) || 1
+        let y = Math.round(Math.abs(endY - startY) / bezierCurveLength) || 1
+        bezierCurveX = Math.abs(endX - startX) / x
+        bezierCurveY = Math.abs(endY - startY) / y
+        
 		upLine(startX, startY, endX, endY)
         rightLine(startX, startY, endX, endY)
         downLine(startX, startY, endX, endY)
@@ -1070,13 +1079,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	}
 	
 	function upLine(px, py, mx, my){
-		let one = Math.abs((mx - px) / bezierCurveLength)
+		let one = Math.abs((mx - px) / bezierCurveX)
 		for (let i = 0; i < one; i++) {
 			let obj = {}
-			if (mx - (px + bezierCurveLength * i) < bezierCurveLength) {
+			if (mx - (px + bezierCurveX * i) < bezierCurveX) {
 				// 最后一点
 				obj.startPoint = {
-					x: px + bezierCurveLength * i,
+					x: px + bezierCurveX * i,
 					y: py,
 					z: 0
 				}
@@ -1086,23 +1095,23 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 					z: 0
 				}
 				obj.middlePoint = {
-					x: (px + bezierCurveLength * i) + ((mx - (px + bezierCurveLength * i)) / 2),
+					x: (px + bezierCurveX * i) + ((mx - (px + bezierCurveX * i)) / 2),
 					y: py + bezierCurveHeight,
 					z: 0
 				}
 			} else {
 				obj.startPoint = {
-					x: px + bezierCurveLength * i,
+					x: px + bezierCurveX * i,
 					y: py,
 					z: 0
 				}
 				obj.endPoint = {
-					x: px + bezierCurveLength * (i + 1),
+					x: px + bezierCurveX * (i + 1),
 					y: py,
 					z: 0
 				}
 				obj.middlePoint = {
-					x: px + bezierCurveLength * (i + 0.5),
+					x: px + bezierCurveX * (i + 0.5),
 					y: py + bezierCurveHeight,
 					z: 0
 				}
@@ -1112,14 +1121,14 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	}
 	
 	function rightLine(px, py, mx, my){
-		let one = Math.abs((my - py) / bezierCurveLength)
+		let one = Math.abs((my - py) / bezierCurveY)
 		for (let i = 0; i < one; i++) {
 			let obj = {}
-			if (py - (my + bezierCurveLength * i) < bezierCurveLength) {
+			if (py - (my + bezierCurveY * i) < bezierCurveY) {
 				// 最后一点
 				obj.startPoint = {
 					x: mx,
-					y: py - bezierCurveLength * i,
+					y: py - bezierCurveY * i,
 					z: 0
 				}
 				obj.endPoint = {
@@ -1129,23 +1138,23 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 				}
 				obj.middlePoint = {
 					x: mx + bezierCurveHeight,
-					y: my + (((py - bezierCurveLength * i) - my) / 2),
+					y: my + (((py - bezierCurveY * i) - my) / 2),
 					z: 0
 				}
 			} else {
 				obj.startPoint = {
 					x: mx,
-					y: py - bezierCurveLength * i,
+					y: py - bezierCurveY * i,
 					z: 0
 				}
 				obj.endPoint = {
 					x: mx,
-					y: py - bezierCurveLength * (i + 1),
+					y: py - bezierCurveY * (i + 1),
 					z: 0
 				}
 				obj.middlePoint = {
 					x: mx + bezierCurveHeight,
-					y: py - bezierCurveLength * (i + 0.5),
+					y: py - bezierCurveY * (i + 0.5),
 					z: 0
 				}
 			}
@@ -1154,13 +1163,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	}
 	
 	function downLine(px, py, mx, my){
-		let one = Math.abs((mx - px) / bezierCurveLength)
+		let one = Math.abs((mx - px) / bezierCurveX)
 		for (let i = 0; i < one; i++) {
 			let obj = {}
-			if (mx - (px + bezierCurveLength * i) < bezierCurveLength) {
+			if (mx - (px + bezierCurveX * i) < bezierCurveX) {
 				// 最后一点
 				obj.startPoint = {
-					x: mx - bezierCurveLength * i,
+					x: mx - bezierCurveX * i,
 					y: my,
 					z: 0
 				}
@@ -1170,23 +1179,23 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 					z: 0
 				}
 				obj.middlePoint = {
-					x: px + (((mx - bezierCurveLength * i) - px) / 2),
+					x: px + (((mx - bezierCurveX * i) - px) / 2),
 					y: my - bezierCurveHeight,
 					z: 0
 				}
 			} else {
 				obj.startPoint = {
-					x: mx - bezierCurveLength * i,
+					x: mx - bezierCurveX * i,
 					y: my,
 					z: 0
 				}
 				obj.endPoint = {
-					x: mx - bezierCurveLength * (i + 1),
+					x: mx - bezierCurveX * (i + 1),
 					y: my,
 					z: 0
 				}
 				obj.middlePoint = {
-					x: mx - bezierCurveLength * (i + 0.5),
+					x: mx - bezierCurveX * (i + 0.5),
 					y: my - bezierCurveHeight,
 					z: 0
 				}
@@ -1196,14 +1205,14 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	}
 	
 	function leftLine(px, py, mx, my){
-		let one = Math.abs((my - py) / bezierCurveLength)
+		let one = Math.abs((my - py) / bezierCurveY)
 		for (let i = 0; i < one; i++) {
 			let obj = {}
-			if (py - (my + bezierCurveLength * i) < bezierCurveLength) {
+			if (py - (my + bezierCurveY * i) < bezierCurveY) {
 				// 最后一点
 				obj.startPoint = {
 					x: px,
-					y: my + bezierCurveLength * i,
+					y: my + bezierCurveY * i,
 					z: 0
 				}
 				obj.endPoint = {
@@ -1213,23 +1222,23 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 				}
 				obj.middlePoint = {
 					x: px - bezierCurveHeight,
-					y: py - ((py - (my + bezierCurveLength * i)) / 2),
+					y: py - ((py - (my + bezierCurveY * i)) / 2),
 					z: 0
 				}
 			} else {
 				obj.startPoint = {
 					x: px,
-					y: my + bezierCurveLength * i,
+					y: my + bezierCurveY * i,
 					z: 0
 				}
 				obj.endPoint = {
 					x: px,
-					y: my + bezierCurveLength * (i + 1),
+					y: my + bezierCurveY * (i + 1),
 					z: 0
 				}
 				obj.middlePoint = {
 					x: px - bezierCurveHeight,
-					y: my + bezierCurveLength * (i + 0.5),
+					y: my + bezierCurveY * (i + 0.5),
 					z: 0
 				}
 			}

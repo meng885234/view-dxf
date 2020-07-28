@@ -251,20 +251,37 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
     		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
     		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
-    		if (usedJSHeapSize > (jsHeapSizeLimit - 512)) {
-    			maxI = data.entities.length
+    		if (totalJSHeapSize > (jsHeapSizeLimit - 512)) {
+    			loadDxfRetry++
+    			// 尝试4次之后，如果内存还未释放，则停止
+    			if (loadDxfRetry > 5) {
+    				maxI = data.entities.length
+    			}
+    		} else {
+    			loadDxfRetry = 1
     		}
     	}
     	
     	if (maxI < data.entities.length) {
-    		setTimeout(() => {
-    			// 场景添加进度
-    			dxfCallback({
-    				type: 'sceneAddFinishDxf',
-    				data: ((maxI / data.entities.length) * 100).toFixed(2)
-    			})
-    			sceneAddObject(data, maxI)
-    		}, 1)
+    		if (loadDxfRetry > 1) {
+    			setTimeout(() => {
+    				// 场景添加进度
+    				dxfCallback({
+    					type: 'sceneAddFinishDxf',
+    					data: ((maxI / data.entities.length) * 100).toFixed(2)
+    				})
+    				sceneAddObject(data, maxI)
+    			}, 2000)
+    		} else{
+    			setTimeout(() => {
+    				// 场景添加进度
+    				dxfCallback({
+    					type: 'sceneAddFinishDxf',
+    					data: ((maxI / data.entities.length) * 100).toFixed(2)
+    				})
+    				sceneAddObject(data, maxI)
+    			}, 1)
+    		}
     	} else{
     		// 场景添加进度
 			dxfCallback({
@@ -471,21 +488,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 清空场景
 	this.sceneRemoveViewerCtrl = function () {
-		/*
-		for (let i = scene.children.length - 1; i >= 0; i--) {
-			var myMesh = scene.children[i]
-		    if(myMesh.type === 'Mesh'){
-				scene.remove(myMesh)
-				myMesh.geometry.dispose()
-				myMesh.material.dispose()
-				myMesh = null
-		    } else {
-		    	scene.remove(myMesh)
-		    	myMesh = null
-		    }
-		}
-		*/
-		
 		// 从scene中删除模型并释放内存
 		if(scene.children.length > 0){
 			for(var i = 0; i< scene.children.length; i++){
@@ -503,6 +505,24 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 				scene.remove(currObj);
 			}
 		}
+		
+		/*
+		if (scene.children.length > 0) {
+			for (let i = scene.children.length - 1; i >= 0; i--) {
+				var myMesh = scene.children[i]
+			    if(myMesh.type === 'Mesh'){
+					scene.remove(myMesh)
+					myMesh.geometry.dispose()
+					myMesh.material.dispose()
+					myMesh = null
+			    } else {
+			    	scene.remove(myMesh)
+			    	myMesh = null
+			    }
+			}
+		}
+		*/
+		
 		// 重置scene
 		scene = null
 		loadDxfRetry = 1
@@ -530,45 +550,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        max: { x: false, y: false, z: false}
 	    }
 		
-		// chrome(64位允许使用的最大内存为4G, 32位允许使用的最大内存为1G)
-    	if (window.performance && window.performance.memory && window.performance.memory.jsHeapSizeLimit) {
-    		let jsHeapSizeLimit = parseInt(window.performance.memory.jsHeapSizeLimit / 1024 / 1024)
-    		let totalJSHeapSize = parseInt(window.performance.memory.totalJSHeapSize / 1024 / 1024)
-    		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
-    		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
-    		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
-    		if (usedJSHeapSize > (jsHeapSizeLimit - 512)) {
-    			// 尝试10次之后，如果内存还未释放，则直接尝试添加
-    			if (loadDxfRetry > 2) {
-    				loadDxfRetry++
-			    	dxfCallback({
-						type: 'sceneAddFinishDxf',
-						data: 0.00
-					})
-    				setTimeout(() => {
-				    	// 场景添加对象
-				    	scene = new THREE.Scene()
-						this.render()
-				    	mergeDxfBlockLine(data)
-				    }, timeOutValue)
-    			} else{
-    				setTimeout(() => {
-    					this.sceneAddDataCtrl(data)
-    				}, 6000)
-    			}
-    		} else {
-				setTimeout(() => {
-			    	dxfCallback({
-						type: 'sceneAddFinishDxf',
-						data: 0.00
-					})
-			    	// 场景添加对象
-			    	scene = new THREE.Scene()
-			    	this.render()
-			    	mergeDxfBlockLine(data)
-			    }, timeOutValue)
-    		}
-    	}
+    	// 场景添加对象
+    	scene = new THREE.Scene()
+    	this.render()
+    	mergeDxfBlockLine(data)
 		
 	}
 	
