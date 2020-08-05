@@ -208,6 +208,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        entity = data.entities[i];
 	
 	        if(entity.type === 'DIMENSION') {
+	        	// 标尺
+	        	scene.add(drawEntity(entity, data));
 	            if(entity.block) {
 	                var block = data.blocks[entity.block];
 	                if(!block) {
@@ -236,6 +238,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	            // 添加模型中的uuid，以便于后期操作中的模型与图纸的联动
 	            if (entity.extendedData && entity.extendedData.customStrings && entity.extendedData.customStrings[0]) {
 	            	obj.userData.modelUUID = entity.extendedData.customStrings[0]
+	            	obj.name = entity.extendedData.customStrings[0]
 	            }
 				scene.add(obj);
 	        }
@@ -625,6 +628,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         } else if(entity.type === 'MTEXT') {
         	// 黑色
             mesh = drawMtext(entity, data);
+        } else if(entity.type === 'DIMENSION') {
+        	// 黑色
+            mesh = drawDimension(entity, data);
         } else if(entity.type === 'ELLIPSE') {
         	// 黑色
             mesh = drawEllipse(entity, data);
@@ -665,7 +671,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	let entityText = entity.text.replace(/\\f.*;/gi, '')
     	
         var color = getColor(entity, data);
-
         var geometry = new THREE.TextGeometry( entityText, {
             font: font,
             size: entity.height * (4/5),
@@ -743,6 +748,21 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
                 return undefined;
         };
 
+        return text;
+    }
+    
+    function drawDimension(entity, data) {
+    	let entityText = String(Math.round(entity.actualMeasurement))
+        let geometry, material, text;
+        let color = getColor(entity, data);
+        if(!font)
+            return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
+        geometry = new THREE.TextGeometry(entityText, { font: font, height: 1, size: entity.attachmentPoint});
+        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || color });
+        text = new THREE.Mesh(geometry, material);
+        text.position.x = entity.middleOfText.x;
+        text.position.y = entity.middleOfText.y;
+        text.position.z = entity.middleOfText.z || 0;
         return text;
     }
 
