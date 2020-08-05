@@ -757,7 +757,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         let color = getColor(entity, data);
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
-        geometry = new THREE.TextGeometry(entityText, { font: font, height: 1, size: entity.attachmentPoint});
+        geometry = new THREE.TextGeometry(entityText, { font: font, height: 1, size: 1});
         material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || color });
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.middleOfText.x;
