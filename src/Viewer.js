@@ -309,6 +309,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         this.render()
     }
     
+    // 删除所有的批注框
+    this.deleteAllDxfAnnotationCtrl = function (list) {
+    	list.forEach((item,index) => {
+    		if (scene.getObjectByName(item.annotationId)) {
+    			this.deleteDxfAnnotationCtrl(item.annotationId)
+			}
+    	})
+    	this.render()
+    }
+    
     // 添加dxf批注
     this.dxfAnnotationListDrawCtrl = function (list) {
     	list.forEach((item,index) => {
@@ -529,6 +539,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		// 重置scene
 		scene = null
 		loadDxfRetry = 1
+		// 场景添加对象
+    	scene = new THREE.Scene()
+    	this.render()
 	}
 	
 	// 删除group，释放内存
@@ -553,11 +566,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        max: { x: false, y: false, z: false}
 	    }
 		
-    	// 场景添加对象
-    	scene = new THREE.Scene()
-    	this.render()
     	mergeDxfBlockLine(data)
-		
 	}
 	
     function initCamera(width,height) {
