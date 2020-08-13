@@ -1,6 +1,6 @@
 {
   "name": "view-dxf",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "DXF drawing online viewer, welcome to use!",
   "main": "dist/index.js",
   "module": "src/index.js",
@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/meng885234/view-dxf#readme",
   "devDependencies": {
-    "webpack": "^4.43.0"
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
   }
 }
