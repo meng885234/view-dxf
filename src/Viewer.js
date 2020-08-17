@@ -502,25 +502,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	// 清空场景
 	this.sceneRemoveViewerCtrl = function () {
 		// 从scene中删除模型并释放内存
-		/*
-		if(scene.children.length > 0){
-			for(var i = 0; i< scene.children.length; i++){
-				var currObj = scene.children[i];
-				
-				// 判断类型
-				if(currObj instanceof THREE.Scene){
-					var children = currObj.children;
-					for(var i = 0; i< children.length; i++){
-						deleteGroup(children[i]);
-					} 
-				}else{ 
-					deleteGroup(currObj);
-				}
-				scene.remove(currObj);
-			}
-		}
-		*/
-		
 		if (scene.children.length > 0) {
 			for (let i = scene.children.length - 1; i >= 0; i--) {
 				var myMesh = scene.children[i]
@@ -542,11 +523,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			}
 		}
 		
-		// 重置scene
-		// scene = null
 		loadDxfRetry = 1
-		// 场景添加对象
-		// scene = new THREE.Scene()
 		this.render()
 	}
 	
