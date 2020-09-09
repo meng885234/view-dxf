@@ -17,14 +17,16 @@ var window_mouse = true;
 let LineControlsCallback = ''	// 绘制面积，距离，角度，周长的回调
 let pointsArrayStr = []			// 记录当前点击的点的集合
 let commonDxfDrawEventType = ''	// 记录外部操作的type
-let bezierCurveLength = 2
-let bezierCurveX = 2
-let bezierCurveY = 2
-let bezierCurveHeight = 1.2
+let bezierCurveLength = 2		// 曲线的间距
+let bezierCurveX = 2			// X轴间距
+let bezierCurveY = 2			// Y轴间距
+let bezierCurveHeight = 1.2		// 曲线的弧度
 let bezierCurveCircle = 6		// 贝塞尔曲线绘制内切圆的时候两个控制点超出的高度系数
 let bezierCurveArr = []
+let markNumberRadius = 2		// 圆形标号的半径
+let highlightColorValue = '#00ff00'		// 鼠标放上去的高亮颜色值
 
-export default function LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback) {
+export default function LineControls(camera,parent,scene,width,height,controls,roleColorValue,dxfCallback) {
     var deleteLine = document.getElementById("delete");
     var listBox = document.getElementById('dxfOperateList') || {style: {}};//获取自定义右键菜单
     var isDrawing = false;
@@ -107,7 +109,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	// 改变头部按钮的颜色
 	function changeDrawingBtnState(val){
 		if (isMobile) {
-    		// 为了解决一个手指的时候与平移冲突，如果有选择画批注框，就不再平移与缩放了
+    		// 为了解决一个手指的时候与平移冲突，如果有选择绘制批注框，就不再平移与缩放了
     		if (val == 'highlight' || val == 'init') {
     			// 打开平移
     			controls.noPan = false
@@ -288,16 +290,16 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 /*
                 if (INTERSECTEDLIST && INTERSECTEDLIST.length>0) {
                 	INTERSECTEDLIST.forEach((item,index) => {
-                		INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
+                		INTERSECTEDLIST[index].object.material.color.set( highlightColorValue );
                 	})
                 }
                 INTERSECTEDLIST = intersects
                 INTERSECTEDLIST.forEach((item,index) => {
-                	INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
+                	INTERSECTEDLIST[index].object.material.color.set( highlightColorValue );
                 })
                 */
                 
-                intersects[0].object.material.color.set( roleColorData[0] );
+                intersects[0].object.material.color.set( highlightColorValue );
                 
                 renderer.render(scene, camera);
             }
@@ -324,7 +326,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
             /*
             if (INTERSECTEDLIST && INTERSECTEDLIST.length>0) {
             	INTERSECTEDLIST.forEach((item,index) => {
-                	INTERSECTEDLIST[index].object.material.color.set( roleColorData[0] );
+                	INTERSECTEDLIST[index].object.material.color.set( highlightColorValue );
                 })
             	INTERSECTEDLIST = []
             }
@@ -364,7 +366,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                     INTERSECTEDFIRST = INTERSECTED;
                     INTERSECTED = null;
                     //改变物体的颜色
-                    intersects[0].object.material.color.set( roleColorData[0] );
+                    intersects[0].object.material.color.set( highlightColorValue );
                     if (objects.length > 0){
                         objects.pop();
                     }
@@ -413,7 +415,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
             var pointsGeometry = new THREE.Geometry();
             //console.log("个数；" + intersects.length);
             pointsGeometry.vertices.push(intersects);
-            var pointsMaterial = new THREE.PointsMaterial({color: roleColorData[0], size: 3});
+            var pointsMaterial = new THREE.PointsMaterial({color: roleColorValue, size: 3});
             var points = new THREE.Points(pointsGeometry, pointsMaterial);
             pointsArray.push(points);
             
@@ -421,7 +423,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 
             /* 创建线段 */
             var lineGeometry = new THREE.Geometry();
-            var lineMaterial = new THREE.LineBasicMaterial({color: roleColorData[0]});
+            var lineMaterial = new THREE.LineBasicMaterial({color: roleColorValue});
 			
             pointsArrayStr.push(points);
 			pointsArrayStr = JSON.parse(JSON.stringify(pointsArrayStr))
@@ -500,12 +502,12 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         }
         /* 创建线段 */
         var lineGeometry = new THREE.Geometry();
-        var lineMaterial = new THREE.LineBasicMaterial({color: roleColorData[0]});
+        var lineMaterial = new THREE.LineBasicMaterial({color: roleColorValue});
         if (pointsArray.length > 0){
             lineGeometry.vertices.push(pointsArray[0].geometry.vertices[0]);
             var pointsGeometry = new THREE.Geometry();
             pointsGeometry.vertices.push(intersects);
-            var pointsMaterial = new THREE.PointsMaterial({color: roleColorData[0], size: 3});
+            var pointsMaterial = new THREE.PointsMaterial({color: roleColorValue, size: 3});
             var points = new THREE.Points(pointsGeometry, pointsMaterial);
             lineGeometry.vertices.push(points.geometry.vertices[0]);
             var line = new THREE.Line(lineGeometry, lineMaterial);
@@ -735,7 +737,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     	}
     }
 	// 修改
-	this.changeLineControls = function (dims, changeWidth, changeHeight, changeCamera, changeParent, changeScene){
+	this.changeLineControls = function (dims, changeWidth, changeHeight, changeCamera, changeParent, changeScene, changeRoleColor){
 		if (changeCamera) {
 			camera = null
 			camera = changeCamera
@@ -747,6 +749,11 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		if (changeScene) {
 			scene = null
 			scene = changeScene
+		}
+		// 修改绘制颜色
+		if (changeRoleColor) {
+			roleColorValue = null
+			roleColorValue = changeRoleColor
 		}
 		width = changeWidth
 		height = changeHeight
@@ -766,7 +773,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         let geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
         
         // 这两行是绘制的虚线
-        let line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
+        let line = new THREE.Line(geometryPoints, new THREE.LineDashedMaterial({ color: roleColorValue, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         line.computeLineDistances()
         
         if (scene.getObjectByName('line_move')) {
@@ -810,6 +817,25 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		renderer.render(scene,camera)
 	}
 	
+	// 绘制圆形批注标号
+	this.drawCircleBox = function (el){
+		let data = el.coordinate.drawRectWorldCoord
+		// data.startX data.startY data.endX data.endY
+		var geometry = new THREE.CircleBufferGeometry( markNumberRadius, 72 );
+		var material = new THREE.MeshBasicMaterial( { color: el.roleColor || roleColorValue } );
+		var circle = new THREE.Mesh( geometry, material );
+		if (el && el.annotationId) {
+    		// 给自己绘制的矩形添加特殊标识
+            circle.name = 'markCircle' + el.annotationId
+            circle.userData = el.coordinate
+    	} else {
+    		circle.name = 'circle_move'
+    	}
+		scene.add( circle );
+		circle.position.set(data.endX, data.endY, 0);
+		renderer.render(scene,camera)
+	}
+	
 	// 绘制矩形框
 	function drawRectBox(data, el){
 		// 给定两个对角点的坐标绘制虚线矩形框
@@ -821,9 +847,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         rectShape.lineTo(data.startX,data.startY);
         let points = rectShape.getPoints();
         let geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-        let line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], linewidth: 1}));
+        let line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial({ color: (el && el.roleColor) ? el.roleColor : roleColorValue, linewidth: 1}));
         // 矩形虚线框
-        // let line = new THREE.Line( geometryPoints, new THREE.LineDashedMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
+        // let line = new THREE.Line( geometryPoints, new THREE.LineDashedMaterial({ color: (el && el.roleColor) ? el.roleColor : roleColorValue, dashSize: 0.4, gapSize: 0.6, linewidth: 1, scale: 1, }));
         // line.computeLineDistances()
         
         if (el && el.annotationId) {
@@ -870,7 +896,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		// 索引数据赋值给几何体的index属性
 		geometry.index = new THREE.BufferAttribute(indexes, 1); //1个为一组
 		
-		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
+		let material = new THREE.MeshBasicMaterial( {color: (el && el.roleColor) ? el.roleColor : roleColorValue, transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
 		let plane = new THREE.Mesh( geometry, material );
 		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
@@ -1026,7 +1052,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		// 索引数据赋值给几何体的index属性
 		geometry.index = new THREE.BufferAttribute(indexes, 1); //3个为一组
 		
-		let material = new THREE.MeshBasicMaterial( {color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
+		let material = new THREE.MeshBasicMaterial( {color: (el && el.roleColor) ? el.roleColor : roleColorValue, transparent: true, opacity: 0.5, side: THREE.DoubleSide} );
 		let plane = new THREE.Mesh( geometry, material );
 		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
@@ -1349,7 +1375,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 	
 	function drawBezierCurve(pointData, el){
 		let geometry = new THREE.BufferGeometry().setFromPoints(pointData)
-		let material = new THREE.LineBasicMaterial({ color: (el && el.toRole) ? roleColorData[el.toRole] : roleColorData[0], linewidth: 1 })
+		let material = new THREE.LineBasicMaterial({ color: (el && el.roleColor) ? el.roleColor : roleColorValue, linewidth: 1 })
 		// Create the final object to add to the scene
 		let curveObject = new THREE.Line(geometry, material)
 		if (el && el.annotationId) {
@@ -1406,7 +1432,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                             INTERSECTEDFIRST = INTERSECTED;
                             INTERSECTED = null;
                             //改变物体的颜色(红色)
-                            INTERSECTEDFIRST.material.color.set( roleColorData[0] );
+                            INTERSECTEDFIRST.material.color.set( highlightColorValue );
                             renderer.render(scene,camera);
                         }
                     }
@@ -1435,7 +1461,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                         INTERSECTEDFIRST = INTERSECTED;
                         INTERSECTED = null;
                         //改变物体的颜色(红色)
-                        INTERSECTEDFIRST.material.color.set( roleColorData[0] );
+                        INTERSECTEDFIRST.material.color.set( highlightColorValue );
                         renderer.render(scene,camera);
                         
                         // 判断当选中了自己绘制的矩形的时候右键弹出删除按钮
@@ -1475,10 +1501,13 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     //右键删除线条
     function deleteOneLine(event){
         if (INTERSECTEDFIRST){
-        	
+        	let reg = /\d+/g;
+        	let str = INTERSECTEDFIRST.name + '';
+        	let id = str.match(reg);
+        	let num = Number(id[0]);
         	dxfCallback({
 	    		type: 'deleteAnnotationDxf',
-	    		data: JSON.parse(JSON.stringify(INTERSECTEDFIRST.name))
+	    		data: JSON.parse(JSON.stringify(num))
 	    	})
         	
         	/*
@@ -1492,6 +1521,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
             scene.remove(INTERSECTEDFIRST);
             renderer.render(scene, camera);
             */
+           
             INTERSECTEDFIRST = null;
         }
         listBox.style.display = 'none';

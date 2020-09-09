@@ -95,10 +95,12 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
  * @constructor
  */
 
-// 记录角色所对应的颜色值
+// 问题类型
 let questionTypeList = [{label: "一般问题", value: 1}, {label: "严重问题", value: 2}]
-let roleColorData = ['#00ff00', '#0A86FF', '#FF8100', '#0AC99A', '#FC0261', '#A327FF']
+// 修改的dxf图纸的线框颜色
 let dxfLineTextColor = ['#000000']
+// 右下角的标号的字体颜色
+let markNumberColor = '#FFFFFF'
 
 function Viewer(data, parent, width, height, font, dxfCallback) {
 	
@@ -142,12 +144,14 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     controls.target.y = camera.position.y;
     controls.target.z = 0;
     controls.zoomSpeed = 3;
-
-
-    var LineControl = new LineControls(camera,parent,scene,width,height,controls,roleColorData,dxfCallback);
+	
+	// 绘制的默认颜色
+	let roleColorValue = '#0A86FF'
+	
+    var LineControl = new LineControls(camera,parent,scene,width,height,controls,roleColorValue,dxfCallback);
     LineControl.LineRender(renderer);
     // LineControls记录最大与最小的坐标
-    LineControl.changeLineControls(dims, width, height)
+    LineControl.changeLineControls(dims, recordWidth, recordHeight)
 
     //window.addEventListener("resize",this.resize);
     //Uncomment this to disable rotation (does not make much sense with 2D drawings).
@@ -306,6 +310,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	if (scene.getObjectByName('content' + id)) {
             scene.remove(scene.getObjectByName('content' + id));
         }
+    	if (scene.getObjectByName('markCircle' + id)) {
+            scene.remove(scene.getObjectByName('markCircle' + id));
+        }
+    	if (scene.getObjectByName('markNumber' + id)) {
+            scene.remove(scene.getObjectByName('markNumber' + id));
+        }
         this.render()
     }
     
@@ -319,11 +329,31 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	this.render()
     }
     
+    // 修改绘制颜色
+    this.changeRoleColorCtrl = function (value) {
+    	roleColorValue = value
+    	LineControl.changeLineControls(dims, recordWidth, recordHeight, '', '', '', roleColorValue)
+	    LineControl.LineRender(this.renderer);
+    }
+    
     // 添加dxf批注
     this.dxfAnnotationListDrawCtrl = function (list) {
     	list.forEach((item,index) => {
+    		if (scene.getObjectByName(item.annotationId)) {
+    			this.deleteDxfAnnotationCtrl(item.annotationId)
+    		}
     		if (!(scene.getObjectByName(item.annotationId))) {
+    			// 绘制图形
     			LineControl.drawRectInitData(item)
+    			
+    			// 绘制标号背景
+    			LineControl.drawCircleBox(item)
+    			if (!item.markNumber) {
+    				item.markNumber = index + 1
+    			}
+    			// 绘制标号
+    			scene.add(drawMarkNumber(item))
+    			
     			if (item.type) {
     				scene.add(drawAnnotationTextType(item))
     			}
@@ -335,35 +365,52 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	this.render()
     }
     
+    // 绘制标号数字
+    function drawMarkNumber(entity){
+    	let geometry, material, text;
+    	let str = entity.markNumber + '';
+        if(!font)
+            return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
+        geometry = new THREE.TextGeometry(str, { font: font, height: 2, size: 2});
+        material = new THREE.MeshBasicMaterial({ color: markNumberColor });
+        text = new THREE.Mesh(geometry, material);
+        let x = geometry.boundingSphere ? (geometry.boundingSphere.radius / 2) : str.length * 0.7;
+        text.position.x = entity.coordinate.drawRectWorldCoord.endX - x;
+        text.position.y = entity.coordinate.drawRectWorldCoord.endY - 1;
+        text.position.z = entity.z || 0;
+        text.name = 'markNumber' + entity.annotationId;
+        return text;
+    }
+    
     // 绘制问题类型
     function drawAnnotationTextType(entity) {
-        var geometry, material, text;
-        let findQuestion = questionTypeList.find(el => el.value == entity.type)
-        let str = findQuestion.label
+        let geometry, material, text;
+        let findQuestion = questionTypeList.find(el => el.value == entity.type);
+        let str = findQuestion.label;
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         geometry = new THREE.TextGeometry(str, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: roleColorData[entity.toRole] });
+        material = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 1.1;
         text.position.z = entity.z || 0;
-        text.name = 'type' + entity.annotationId
+        text.name = 'type' + entity.annotationId;
         return text;
     }
     
     // 绘制问题内容
     function drawAnnotationText(entity) {
-        var geometry, material, text;
+        let geometry, material, text;
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
         geometry = new THREE.TextGeometry(entity.content, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: roleColorData[entity.toRole] });
+        material = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
         text = new THREE.Mesh(geometry, material);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 2.3;
         text.position.z = entity.z || 0;
-        text.name = 'content' + entity.annotationId
+        text.name = 'content' + entity.annotationId;
         return text;
     }
     
@@ -372,10 +419,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	for (let i = 0; i < 4; i++) {
     		setTimeout(() => {
     			if (parseInt(i%2) > 0) {
-    				scene.getObjectByName(data.annotationId).material.color.set( roleColorData[data.toRole] )
+    				scene.getObjectByName(data.annotationId).material.color.set( data.roleColor || roleColorValue )
     				this.render()
     			} else {
-    				scene.getObjectByName(data.annotationId).material.color.set( roleColorData[0] )
+    				scene.getObjectByName(data.annotationId).material.color.set( roleColorValue )
     				this.render()
     			}
     		}, i * 200)
