@@ -95,7 +95,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	let firstPoint = {x: 10, y: 10}
 	let secondPoint = {x: 0, y: 0}
 	// 记录初始化的时候上面两点所对应的屏幕坐标的距离
-	let startDistance = 0
+	let startDistance = 1
 	// 添加双指触屏缩放的防抖
 	let antiShakeDistance = 30.0
 	let doubleTouchDistance = 0
@@ -283,7 +283,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		// 计算缩放量
 		let first = scope.pointToScreenPosition(firstPoint, screenData)
 		let second = scope.pointToScreenPosition(secondPoint, screenData)
-		if (!startDistance) {
+		if (val == 'sceneAddFinishDxf') {
 			startDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
 		}
 		let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))

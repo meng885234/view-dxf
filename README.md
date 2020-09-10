@@ -310,6 +310,16 @@ cadCanvas.resetCameraCtrl()
 cadCanvas.resetCameraCtrl(width, height)
 ```
 
+----
+
+###### 17,传入缩放值：
+* 调用接口
+```javascript
+cadCanvas.zoomCameraCtrl(1)
+```
+* 注：1为既不放大也不缩小
+* 注：和type=updateScreenPositionDxf的返回缩放值保持一致
+
 
 
 

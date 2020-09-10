@@ -109,6 +109,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	let _this = this
 	// step
 	let ZONE_ENTITIES = 50
+	// viewPort
+	let viewPort = {}
 	// setTimeout
 	let timeOutValue = 100
 	// 记录宽高
@@ -176,10 +178,13 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		// 场景添加对象
     		mergeDxfBlockLine(data)
     	} else {
+    		// 场景添加进度(结束)
     		dxfCallback({
 				type: 'sceneAddFinishDxf',
 				data: 100.00
 			})
+    		// 全部加载完毕，开始计算缩放初始值
+    		controls.updateScreenPosition('sceneAddFinishDxf')
     	}
     }, timeOutValue)
     
@@ -276,7 +281,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	if (maxI < data.entities.length) {
     		if (loadDxfRetry > 1) {
     			setTimeout(() => {
-    				// 场景添加进度
+    				// 场景添加进度(内存不足时，尝试五次)
     				dxfCallback({
     					type: 'sceneAddFinishDxf',
     					data: ((maxI / data.entities.length) * 100).toFixed(2)
@@ -285,7 +290,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     			}, 2000)
     		} else{
     			setTimeout(() => {
-    				// 场景添加进度
+    				// 场景添加进度(正常情况下)
     				dxfCallback({
     					type: 'sceneAddFinishDxf',
     					data: ((maxI / data.entities.length) * 100).toFixed(2)
@@ -294,11 +299,13 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     			}, 1)
     		}
     	} else{
-    		// 场景添加进度
+    		// 场景添加进度(结束)
 			dxfCallback({
 				type: 'sceneAddFinishDxf',
 				data: Number(((maxI / data.entities.length) * 100).toFixed(2))
 			})
+			// 全部加载完毕，开始计算缩放初始值
+			controls.updateScreenPosition('sceneAddFinishDxf')
     	}
     	
     }
@@ -476,7 +483,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	LineControl.commonDxfDrawEvent(type, callback)
     }
 	
-	
+	// 外部修改缩放值
+	this.zoomCameraCtrl = function (value) {
+		let scale = 1 / value
+    	camera.top = viewPort.top * scale;
+        camera.bottom = viewPort.bottom * scale;
+        camera.left = viewPort.left * scale;
+        camera.right = viewPort.right * scale;
+        camera.updateProjectionMatrix();
+        this.render()
+    }
 	
 	
 	
@@ -631,7 +647,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
             vp_height = vp_width / aspectRatio;
         }
 
-        var viewPort = {
+        viewPort = {
             bottom: -vp_height / 2,
             left: -vp_width / 2,
             top: vp_height / 2,
