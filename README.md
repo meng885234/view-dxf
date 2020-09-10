@@ -108,7 +108,7 @@ cadCanvas.deleteAllDxfAnnotationCtrl(data)
 
 ----
 
-###### 4，删除单条批注调用的接口：
+###### 4，单条删除批注调用的接口：
 * 调用接口
 ```javascript
 cadCanvas.deleteDxfAnnotationCtrl(annotationId)
@@ -116,7 +116,15 @@ cadCanvas.deleteDxfAnnotationCtrl(annotationId)
 
 ----
 
-###### 5，高亮当前选中的批注调用的接口：
+###### 5，清空画布调用的接口：
+* 调用接口
+```javascript
+cadCanvas.sceneRemoveViewerCtrl()
+```
+
+----
+
+###### 6，高亮当前选中的批注调用的接口：
 * 数据格式以及最少含有的字段
 ```javascript
 let data = {
@@ -128,14 +136,6 @@ let data = {
 * 调用接口
 ```javascript
 cadCanvas.selectedDxfAnnotationCtrl(data)
-```
-
-----
-
-###### 6，清空画布所调用的接口：
-* 调用接口
-```javascript
-cadCanvas.sceneRemoveViewerCtrl()
 ```
 
 ----
@@ -294,6 +294,22 @@ cadCanvas.changeRoleColorCtrl('#00ff00')
 ```
 * 注：传入的颜色值格式为十六进制颜色模式
 
+----
+
+###### 15,回归主视图 (重置视角)：
+* 调用接口
+```javascript
+cadCanvas.resetCameraCtrl()
+```
+
+----
+
+###### 16,修改显示窗口大小：
+* 调用接口
+```javascript
+cadCanvas.resetCameraCtrl(width, height)
+```
+
 
 
 
@@ -317,6 +333,7 @@ let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, heigh
 ###### 特殊情况说明：
 * 引用方式：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@1.2.0/dist/index.js" type="text/javascript" charset="utf-8"></script>`
 * 最新的包：`<script src="https://cdn.jsdelivr.net/npm/view-dxf@latest/dist/index.js" type="text/javascript" charset="utf-8"></script>`
+* 引用方式：`import Viewer from 'view-dxf'`
 * 打包方式：webpack --config webpack.config.js
 * 发布方式：npm publish
 * 更新方式：npm update view-dxf --save

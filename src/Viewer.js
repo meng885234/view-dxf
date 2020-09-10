@@ -12,6 +12,7 @@
 import * as THREE from 'three'
 import OrbitControls from './OrbitControls.js'
 import LineControls from './LineControls.js'
+import typeface from './typeface.json'
 
 
 
@@ -167,6 +168,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     this.render();
     
+    if (!font || !(font.type)) {
+    	font = new THREE.Font(typeface)
+    }
     setTimeout(() => {
     	if (data && data.entities && data.entities.length > 0) {
     		// 场景添加对象
@@ -527,8 +531,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 重置相机位置
 	this.resetCameraCtrl = function (changeWidth, changeHeight) {
-		recordWidth = changeWidth
-		recordHeight = changeHeight
+		if (changeWidth) {
+			recordWidth = changeWidth
+		}
+		if (changeHeight) {
+			recordHeight = changeHeight
+		}
 		
 		camera = null
 		camera = initCamera(recordWidth,recordHeight)
