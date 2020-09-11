@@ -1099,7 +1099,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         leftLine(startX, startY, endX, endY)
         // 遍历绘制云线
         bezierCurveArr.forEach((item,index) => {
-        	pointData = pointData.concat(getBezierCurvePoint(item))
+        	pointData = pointData.concat(scope.getBezierCurvePoint(item))
         })
         drawBezierCurve(pointData, el)
 	}
@@ -1297,7 +1297,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		ellipseLine(startX, startY, endX, endY)
         // 遍历绘制云线
         bezierCurveArr.forEach((item,index) => {
-        	pointData = pointData.concat(getBezierCurvePoint(item, 'twoControlPoint'))
+        	pointData = pointData.concat(scope.getBezierCurvePoint(item, 'twoControlPoint'))
         })
         drawBezierCurve(pointData, el)
 	}
@@ -1351,7 +1351,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		bezierCurveArr.push(down)
 	}
 	
-	function getBezierCurvePoint(data, sign){
+	this.getBezierCurvePoint = function (data, sign) {
 		let curve = ''
 		if (sign == 'twoControlPoint') {
 			// 两个控制点的贝塞尔曲线

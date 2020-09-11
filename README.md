@@ -124,13 +124,28 @@ cadCanvas.sceneRemoveViewerCtrl()
 
 ----
 
-###### 6，高亮当前选中的批注调用的接口：
+###### 6，定位当前批注到屏幕中间并高亮提示调用的接口：
 * 数据格式以及最少含有的字段
 ```javascript
 let data = {
 	annotationId: 320,	// 批注的唯一标识
 	toRole: 1,	// 角色，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）---参数已被遗弃
-	roleColor: '#000000'
+	roleColor: '#000000',
+	coordinate: {
+		drawRectScreenCoord: {
+			startX: 38,
+			startY: 210,
+			endX: 238,
+			endY: 402
+		},
+		drawRectWorldCoord: {
+			startX: -24.88748981868235,
+			startY: 26.64271682686174,
+			endX: 25.490601775931857,
+			endY: 48.2797488960321
+		},
+		type: "drawCloudType"
+	}
 }
 ```
 * 调用接口
@@ -318,6 +333,7 @@ cadCanvas.resetCameraCtrl(width, height)
 cadCanvas.zoomCameraCtrl(1)
 ```
 * 注：1为既不放大也不缩小
+* 注：传入的值要为number类型的
 * 注：和type=updateScreenPositionDxf的返回缩放值保持一致
 
 

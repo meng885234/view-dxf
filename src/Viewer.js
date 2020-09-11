@@ -106,13 +106,14 @@ let markNumberColor = '#FFFFFF'
 function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 全局this
-	let _this = this
+	let scope = this
 	// step
 	let ZONE_ENTITIES = 50
 	// viewPort
 	let viewPort = {}
 	// setTimeout
-	let timeOutValue = 100
+	let moveTimeOut = {}
+	let selectTimeOut = {}
 	// 记录宽高
 	let recordWidth = width
 	let recordHeight = height
@@ -148,8 +149,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     controls.target.z = 0;
     controls.zoomSpeed = 3;
 	
-	// 绘制的默认颜色
-	let roleColorValue = '#0A86FF'
+	let roleColorValue = '#0A86FF'			// 绘制的默认颜色
+	let highlightColorValue = '#00ff00'		// 高亮颜色值
 	
     var LineControl = new LineControls(camera,parent,scene,width,height,controls,roleColorValue,dxfCallback);
     LineControl.LineRender(renderer);
@@ -186,7 +187,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		// 全部加载完毕，开始计算缩放初始值
     		controls.updateScreenPosition('sceneAddFinishDxf')
     	}
-    }, timeOutValue)
+    }, 100)
     
     // 合并block里面的所有线
     function mergeDxfBlockLine (data) {
@@ -258,7 +259,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        obj = null;
 	    }
     	
-    	_this.resetCameraCtrl(recordWidth, recordHeight)
+    	scope.resetCameraCtrl(recordWidth, recordHeight)
     	
     	// chrome(64位允许使用的最大内存为4G, 32位允许使用的最大内存为1G)
     	if (window.performance && window.performance.memory && window.performance.memory.jsHeapSizeLimit) {
@@ -425,21 +426,6 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         return text;
     }
     
-    // 闪烁选中的矩形框
-    this.selectedDxfAnnotationCtrl = function (data) {
-    	for (let i = 0; i < 4; i++) {
-    		setTimeout(() => {
-    			if (parseInt(i%2) > 0) {
-    				scene.getObjectByName(data.annotationId).material.color.set( data.roleColor || roleColorValue )
-    				this.render()
-    			} else {
-    				scene.getObjectByName(data.annotationId).material.color.set( roleColorValue )
-    				this.render()
-    			}
-    		}, i * 200)
-    	}
-    }
-    
     // 外部调用接口-返回当前世界坐标所对应的屏幕坐标
     this.pointToScreenPositionCtrl = function (list, callback) {
     	if (Object.prototype.toString.call(list) === "[object Array]") {
@@ -485,13 +471,68 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	// 外部修改缩放值
 	this.zoomCameraCtrl = function (value) {
-		let scale = 1 / value
-    	camera.top = viewPort.top * scale;
-        camera.bottom = viewPort.bottom * scale;
-        camera.left = viewPort.left * scale;
-        camera.right = viewPort.right * scale;
-        camera.updateProjectionMatrix();
-        this.render()
+		if (value > 0) {
+			let scale = 1 / value
+	    	camera.top = viewPort.top * scale;
+	        camera.bottom = viewPort.bottom * scale;
+	        camera.left = viewPort.left * scale;
+	        camera.right = viewPort.right * scale;
+	        camera.updateProjectionMatrix();
+	        this.render()
+		}
+    }
+	
+	// 批注定位
+	this.selectedDxfAnnotationCtrl = function (value) {
+		let x = (value.coordinate.drawRectWorldCoord.startX + value.coordinate.drawRectWorldCoord.endX) / 2
+		let y = (value.coordinate.drawRectWorldCoord.startY + value.coordinate.drawRectWorldCoord.endY) / 2
+		let obj = {
+			startPoint: camera.position,
+			middlePoint: {
+				x: (x + camera.position.x) / 2,
+				y: (y + camera.position.y) / 2,
+				z: 0
+			},
+			endPoint: {
+				x: x,
+				y: y,
+				z: 0
+			}
+		}
+		let points = LineControl.getBezierCurvePoint(obj)
+		let index = 0
+		let max = 50
+		let timeValue = 10
+		clearInterval(moveTimeOut)
+		clearTimeout(selectTimeOut)
+		moveTimeOut = setInterval(() => {
+			camera.position.set(points[index].x, points[index].y, camera.position.z)
+			camera.lookAt(new THREE.Vector3(points[index].x, points[index].y, camera.position.z))
+			controls.target = points[index]
+			this.render()
+			index++
+			if(index >= max){
+				clearInterval(moveTimeOut)
+			}
+		}, timeValue)
+		selectTimeOut = setTimeout(() => {
+			blinkAnnotationCtrl(value)
+		}, max * timeValue * 2)
+	}
+	
+	// 闪烁选中的矩形框
+    function blinkAnnotationCtrl (data) {
+    	for (let i = 0; i < 6; i++) {
+    		setTimeout(() => {
+    			if (parseInt(i%2) > 0) {
+    				scene.getObjectByName(data.annotationId).material.color.set( data.roleColor || roleColorValue )
+    				scope.render()
+    			} else {
+    				scene.getObjectByName(data.annotationId).material.color.set( highlightColorValue )
+    				scope.render()
+    			}
+    		}, i * 200)
+    	}
     }
 	
 	
