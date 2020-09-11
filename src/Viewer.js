@@ -509,6 +509,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			camera.position.set(points[index].x, points[index].y, camera.position.z)
 			camera.lookAt(new THREE.Vector3(points[index].x, points[index].y, camera.position.z))
 			controls.target = points[index]
+			controls.update()
 			this.render()
 			index++
 			if(index >= max){
