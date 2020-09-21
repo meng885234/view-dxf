@@ -478,6 +478,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        camera.left = viewPort.left * scale;
 	        camera.right = viewPort.right * scale;
 	        camera.updateProjectionMatrix();
+	        controls.update()
 	        this.render()
 		}
     }
@@ -502,7 +503,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		let points = LineControl.getBezierCurvePoint(obj)
 		let index = 0
 		let max = 50
-		let timeValue = 10
+		let timeValue = 1
 		clearInterval(moveTimeOut)
 		clearTimeout(selectTimeOut)
 		moveTimeOut = setInterval(() => {
@@ -518,7 +519,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		}, timeValue)
 		selectTimeOut = setTimeout(() => {
 			blinkAnnotationCtrl(value)
-		}, max * timeValue * 2)
+		}, max * timeValue * 40)
 	}
 	
 	// 闪烁选中的矩形框
