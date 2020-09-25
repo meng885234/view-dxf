@@ -1501,13 +1501,9 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     //右键删除线条
     function deleteOneLine(event){
         if (INTERSECTEDFIRST){
-        	let reg = /\d+/g;
-        	let str = INTERSECTEDFIRST.name + '';
-        	let id = str.match(reg);
-        	let num = Number(id[0]);
         	dxfCallback({
 	    		type: 'deleteAnnotationDxf',
-	    		data: JSON.parse(JSON.stringify(num))
+	    		data: JSON.parse(JSON.stringify(INTERSECTEDFIRST.name))
 	    	})
         	
         	/*
