@@ -99,7 +99,7 @@ THREEx.BulgeGeometry.prototype = Object.create( THREE.Geometry.prototype );
 // 问题类型
 let questionTypeList = [{label: "一般问题", value: 1}, {label: "严重问题", value: 2}]
 // 修改的dxf图纸的线框颜色
-let dxfLineTextColor = ['#000000']
+let dxfLineTextColor = ['#000000', '#FF0000']
 // 右下角的标号的字体颜色
 let markNumberColor = '#FFFFFF'
 
@@ -119,13 +119,23 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	let recordHeight = height
 	// 记录切换图纸之后内存占用的次数
 	let loadDxfRetry = 1
+	let maxTryNumber = 1
+	// block缓存
+	let blockData = {}
+	// 已添加的modelId
+	let alreadyHaveModelIdData = {}
+	let alreadyHaveModelIdArr = []
+	// 黑色材质
+	let material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] });
+	// 红色材质
+	let redMaterial = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[1] });
 	
     createLineTypeShaders(data);
 
     var scene = new THREE.Scene();
 
     // Create scene from dxf object (data)
-    var i, entity, obj, min_x, min_y, min_z, max_x, max_y, max_z;
+    var entity, obj, min_x, min_y, min_z, max_x, max_y, max_z;
     var dims = {
         min: { x: false, y: false, z: false},
         max: { x: false, y: false, z: false}
@@ -174,10 +184,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     if (!font || !(font.type)) {
     	font = new THREE.Font(typeface)
     }
+    
     setTimeout(() => {
     	if (data && data.entities && data.entities.length > 0) {
     		// 场景添加对象
-    		mergeDxfBlockLine(data)
+    		mergeDxfBlockLine()
     	} else {
     		// 场景添加进度(结束)
     		dxfCallback({
@@ -189,8 +200,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	}
     }, 100)
     
-    // 合并block里面的所有线
-    function mergeDxfBlockLine (data) {
+    function mergeDxfBlockLine () {
+    	// 合并block里面的所有线
     	for (let key in data.blocks) {
     		if (data.blocks.hasOwnProperty(key) === true) {
     			if (data.blocks[key].entities && data.blocks[key].entities.length > 0) {
@@ -198,7 +209,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     				let indexArr = []
     				data.blocks[key].entities.forEach((item,index) => {
     					if (entitiesLineFirst && item.type === 'LINE') {
-    						entitiesLineFirst.vertices = entitiesLineFirst.vertices.concat(item.vertices)
+		    				entitiesLineFirst.vertices = entitiesLineFirst.vertices.concat(item.vertices)
     						indexArr.unshift(index)
     					}
     					if (!entitiesLineFirst && item.type === 'LINE') {
@@ -212,6 +223,33 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		}
     	}
     	
+    	// 记录重复的modelId数据
+    	data.entities.forEach((item,index) => {
+    		if (item.type == 'LINE' && item.extendedData && item.extendedData.customStrings && item.extendedData.customStrings[0]) {
+    			if (alreadyHaveModelIdData[item.extendedData.customStrings[0]]) {
+    				alreadyHaveModelIdData[item.extendedData.customStrings[0]].push(index)
+    			} else {
+    				alreadyHaveModelIdData[item.extendedData.customStrings[0]] = [index]
+    			}
+            }
+    	})
+    	
+    	// 合并重复的modelId数据
+    	for (let key in alreadyHaveModelIdData) {
+    		let startIndex = 0
+    		alreadyHaveModelIdData[key].forEach((item,index) => {
+    			if (index > 0) {
+    				let a = data.entities[item].vertices[0]
+    				let b = data.entities[item].vertices[1]
+    				if (a.x != b.x || a.y != b.y) {
+    					data.entities[startIndex].vertices = data.entities[startIndex].vertices.concat(data.entities[item].vertices)
+    				}
+    			} else {
+    				startIndex = item
+    			}
+    		})
+    	}
+    	
     	sceneAddObject(data, 0)
     }
     
@@ -220,7 +258,17 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	let maxI = (sign + ZONE_ENTITIES) > data.entities.length ? data.entities.length : (sign + ZONE_ENTITIES)
     	for(let i = sign; i < maxI; i++) {
 	        entity = data.entities[i];
-	
+			
+			// 过滤重复的modelId数据
+			if (entity.type == 'LINE' && entity.extendedData && entity.extendedData.customStrings && entity.extendedData.customStrings[0]) {
+				let find = alreadyHaveModelIdArr.find(el => el == entity.extendedData.customStrings[0])
+				if (find) {
+					continue
+				} else{
+					alreadyHaveModelIdArr.push(entity.extendedData.customStrings[0])
+				}
+            }
+			
 	        if(entity.type === 'DIMENSION') {
 	        	// 标尺
 	        	scene.add(drawEntity(entity, data));
@@ -231,7 +279,14 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	                    continue;
 	                }
 	                for(var j = 0; j < block.entities.length; j++) {
-	                    obj = drawEntity(block.entities[j], data);
+	                    let bName = entity.block + j;
+			        	if (!blockData[bName]) {
+			        		blockData[bName] = drawEntity(block.entities[j], data);
+			        	}
+			        	if (blockData[bName]) {
+			        		obj = blockData[bName].clone();
+			        	}
+	                    // obj = drawEntity(block.entities[j], data);
 	                }
 	            } else {
 	                console.log('WARNING: No block for DIMENSION entity');
@@ -256,6 +311,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	            }
 				scene.add(obj);
 	        }
+	        if(obj && obj.type === 'Mesh'){
+				obj.geometry.dispose()
+				obj.material.dispose()
+		    }
 	        obj = null;
 	    }
     	
@@ -266,23 +325,24 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		let jsHeapSizeLimit = parseInt(window.performance.memory.jsHeapSizeLimit / 1024 / 1024)
     		let totalJSHeapSize = parseInt(window.performance.memory.totalJSHeapSize / 1024 / 1024)
     		let usedJSHeapSize = parseInt(window.performance.memory.usedJSHeapSize / 1024 / 1024)
-    		let residue = parseInt((jsHeapSizeLimit - usedJSHeapSize).toFixed(2))
-    		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, '------------------------------------->>>')
-    		if (totalJSHeapSize > (jsHeapSizeLimit - 512)) {
+    		let residue = parseInt((jsHeapSizeLimit - totalJSHeapSize).toFixed(2))
+    		console.log(usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit, residue, Number(((maxI / data.entities.length) * 100).toFixed(2)))
+    		if (totalJSHeapSize > (jsHeapSizeLimit - (maxTryNumber * 64 * 3))) {
     			loadDxfRetry++
-    			// 尝试4次之后，如果内存还未释放，则停止
-    			if (loadDxfRetry > 5) {
+    			// 尝试(maxTryNumber - 1)次之后，如果内存还未释放，则停止
+    			if (loadDxfRetry > maxTryNumber) {
     				maxI = data.entities.length
     			}
     		} else {
     			loadDxfRetry = 1
+    			maxTryNumber = 1
     		}
     	}
     	
     	if (maxI < data.entities.length) {
     		if (loadDxfRetry > 1) {
     			setTimeout(() => {
-    				// 场景添加进度(内存不足时，尝试五次)
+    				// 场景添加进度(内存不足时，尝试(maxTryNumber - 1)次)
     				dxfCallback({
     					type: 'sceneAddFinishDxf',
     					data: ((maxI / data.entities.length) * 100).toFixed(2)
@@ -300,6 +360,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     			}, 1)
     		}
     	} else{
+    		for (let key in blockData) {
+    			blockData[key] = null
+    		}
+    		blockData = {}
+    		alreadyHaveModelIdData = {}
+    		alreadyHaveModelIdArr = []
     		// 场景添加进度(结束)
 			dxfCallback({
 				type: 'sceneAddFinishDxf',
@@ -379,13 +445,13 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     // 绘制标号数字
     function drawMarkNumber(entity){
-    	let geometry, material, text;
+    	let geometry, text;
     	let str = entity.markNumber + '';
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
-        geometry = new THREE.TextGeometry(str, { font: font, height: 2, size: 2});
-        material = new THREE.MeshBasicMaterial({ color: markNumberColor });
-        text = new THREE.Mesh(geometry, material);
+        geometry = new THREE.TextBufferGeometry(str, { font: font, height: 2, size: 2});
+        let textMaterial = new THREE.MeshBasicMaterial({ color: markNumberColor });
+        text = new THREE.Mesh(geometry, textMaterial);
         let x = geometry.boundingSphere ? (geometry.boundingSphere.radius / 2) : str.length * 0.7;
         text.position.x = entity.coordinate.drawRectWorldCoord.endX - x;
         text.position.y = entity.coordinate.drawRectWorldCoord.endY - 1;
@@ -396,14 +462,14 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     // 绘制问题类型
     function drawAnnotationTextType(entity) {
-        let geometry, material, text;
+        let geometry, text;
         let findQuestion = questionTypeList.find(el => el.value == entity.type);
         let str = findQuestion.label;
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
-        geometry = new THREE.TextGeometry(str, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
-        text = new THREE.Mesh(geometry, material);
+        geometry = new THREE.TextBufferGeometry(str, { font: font, height: 1, size: 1});
+        let textMaterial = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
+        text = new THREE.Mesh(geometry, textMaterial);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 1.1;
         text.position.z = entity.z || 0;
@@ -413,12 +479,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     // 绘制问题内容
     function drawAnnotationText(entity) {
-        let geometry, material, text;
+        let geometry, text;
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
-        geometry = new THREE.TextGeometry(entity.content, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
-        text = new THREE.Mesh(geometry, material);
+        geometry = new THREE.TextBufferGeometry(entity.content, { font: font, height: 1, size: 1});
+        let textMaterial = new THREE.MeshBasicMaterial({ color: entity.roleColor || roleColorValue });
+        text = new THREE.Mesh(geometry, textMaterial);
         text.position.x = entity.coordinate.drawRectWorldCoord.startX;
         text.position.y = entity.coordinate.drawRectWorldCoord.startY - 2.3;
         text.position.z = entity.z || 0;
@@ -487,7 +553,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	this.selectedDxfAnnotationCtrl = function (value) {
 		let x = (value.coordinate.drawRectWorldCoord.startX + value.coordinate.drawRectWorldCoord.endX) / 2
 		let y = (value.coordinate.drawRectWorldCoord.startY + value.coordinate.drawRectWorldCoord.endY) / 2
-		let obj = {
+		let selectedObj = {
 			startPoint: camera.position,
 			middlePoint: {
 				x: (x + camera.position.x) / 2,
@@ -500,7 +566,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 				z: 0
 			}
 		}
-		let points = LineControl.getBezierCurvePoint(obj)
+		let points = LineControl.getBezierCurvePoint(selectedObj)
 		let index = 0
 		let max = 50
 		let timeValue = 1
@@ -638,6 +704,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		}
 		
 		loadDxfRetry = 1
+		maxTryNumber = 3
 		this.render()
 	}
 	
@@ -663,7 +730,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        max: { x: false, y: false, z: false}
 	    }
 		
-    	mergeDxfBlockLine(data)
+		clearTimeout(selectTimeOut)
+		selectTimeOut = setTimeout(() => {
+			mergeDxfBlockLine()
+		}, 2000)
 	}
 	
     function initCamera(width,height) {
@@ -713,9 +783,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     function drawEntity(entity, data) {
     	var mesh;
         if(entity.type === 'CIRCLE' || entity.type === 'ARC') {
+        	// 黑色
             mesh = drawArc(entity, data);
         } else if(entity.type === 'LWPOLYLINE' || entity.type === 'LINE' || entity.type === 'POLYLINE') {
-        	// 黑色(line的改了一半，带有pattern的是轴网-红线，不带的还是用的原来的材质)
+        	// 黑色(line的改了一半，带有 pattern 的是轴网-红线，不带的还是用的原来的材质)
             mesh = drawLine(entity, data);
         } else if(entity.type === 'TEXT') {
         	// 黑色
@@ -764,10 +835,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         var points = curve.getPoints( 50 );
         var geometry = new THREE.BufferGeometry().setFromPoints( points );
         
-        var material = new THREE.LineBasicMaterial( {  linewidth: 1, color : dxfLineTextColor[0] || color } );
+        // var material = new THREE.LineBasicMaterial( {  linewidth: 1, color : dxfLineTextColor[0] || color } );
 
         // Create the final object to add to the scene
-        var ellipse = new THREE.Line( geometry, material );
+        var ellipse = new THREE.Line( geometry, material.clone() );
         return ellipse;
     }
 
@@ -777,15 +848,15 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	let entityText = entity.text.replace(/\\f.*;/gi, '')
     	
         var color = getColor(entity, data);
-        var geometry = new THREE.TextGeometry( entityText, {
+        var geometry = new THREE.TextBufferGeometry( entityText, {
             font: font,
             size: entity.height * (4/5),
             height: 1
         });
         
-        var material = new THREE.MeshBasicMaterial( {color: dxfLineTextColor[0] || color} );
+        // var material = new THREE.MeshBasicMaterial( {color: dxfLineTextColor[0] || color} );
         
-        var text = new THREE.Mesh( geometry, material );
+        var text = new THREE.Mesh( geometry, material.clone() );
 
         // Measure what we rendered.
         var measure = new THREE.Box3();
@@ -859,13 +930,13 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     function drawDimension(entity, data) {
     	let entityText = String(Math.round(entity.actualMeasurement))
-        let geometry, material, text;
+        let geometry, text;
         let color = getColor(entity, data);
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
-        geometry = new THREE.TextGeometry(entityText, { font: font, height: 1, size: 1});
-        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || color });
-        text = new THREE.Mesh(geometry, material);
+        geometry = new THREE.TextBufferGeometry(entityText, { font: font, height: 1, size: 1});
+        // let material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || color });
+        text = new THREE.Mesh(geometry, material.clone());
         text.position.x = entity.middleOfText.x;
         text.position.y = entity.middleOfText.y;
         text.position.z = entity.middleOfText.z || 0;
@@ -901,71 +972,37 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 
         var geometry = new THREE.BufferGeometry().setFromPoints( interpolatedPoints );
         
-        var material = new THREE.LineBasicMaterial( { linewidth: 1, color : dxfLineTextColor[0] || color } );
+        // var material = new THREE.LineBasicMaterial( { linewidth: 1, color : dxfLineTextColor[0] || color } );
         
-        var splineObject = new THREE.Line( geometry, material );
+        var splineObject = new THREE.Line( geometry, material.clone() );
 
         return splineObject;
     }
 
     function drawLine(entity, data) {
-        var geometry = new THREE.Geometry(),
-            color = getColor(entity, data),
-            material, lineType, vertex, startPoint, endPoint, bulgeGeometry,
-            bulge, i, line;
+        var color = getColor(entity, data),
+            vectorData = [], lineType, vertex;
 
-        // create geometry
-        for(i = 0; i < entity.vertices.length; i++) {
-
-            if(entity.vertices[i].bulge) {
-                bulge = entity.vertices[i].bulge;
-                startPoint = entity.vertices[i];
-                endPoint = i + 1 < entity.vertices.length ? entity.vertices[i + 1] : geometry.vertices[0];
-
-                bulgeGeometry = new THREEx.BulgeGeometry(startPoint, endPoint, bulge);
-
-                geometry.vertices.push.apply(geometry.vertices, bulgeGeometry.vertices);
-            } else {
-                vertex = entity.vertices[i];
-                geometry.vertices.push(new THREE.Vector3(vertex.x, vertex.y, 0));
-            }
-
+        for(let i = 0; i < entity.vertices.length; i++) {
+        	vertex = entity.vertices[i];
+        	vectorData.push(new THREE.Vector3(vertex.x, vertex.y, 0));
         }
-        if(entity.shape) geometry.vertices.push(geometry.vertices[0]);
-
-
-        // set material
+        if(entity.shape) vectorData.push(vectorData[0]);
         if(entity.lineType) {
             lineType = data.tables.lineType.lineTypes[entity.lineType];
         }
 		
+		let lineMaterial = null
         if(lineType && lineType.pattern && lineType.pattern.length !== 0) {
-            material = new THREE.LineDashedMaterial({ color: color, gapSize: 4, dashSize: 4});
+            // lineMaterial = new THREE.LineDashedMaterial({ color: color, gapSize: 4, dashSize: 4});
+            lineMaterial = redMaterial.clone()
         } else {
-            material = new THREE.LineBasicMaterial({ linewidth: 1, color: dxfLineTextColor[0] || color });
+            // lineMaterial = new THREE.LineBasicMaterial({ linewidth: 1, color: dxfLineTextColor[0] || color });
+            lineMaterial = material.clone()
         }
-
-        // if(lineType && lineType.pattern && lineType.pattern.length !== 0) {
-
-        //           geometry.computeLineDistances();
-
-        //           // Ugly hack to add diffuse to this. Maybe copy the uniforms object so we
-        //           // don't add diffuse to a material.
-        //           lineType.material.uniforms.diffuse = { type: 'c', value: new THREE.Color(color) };
-
-        // 	material = new THREE.ShaderMaterial({
-        // 		uniforms: lineType.material.uniforms,
-        // 		vertexShader: lineType.material.vertexShader,
-        // 		fragmentShader: lineType.material.fragmentShader
-        // 	});
-        // }else {
-        // 	material = new THREE.LineBasicMaterial({ linewidth: 1, color: color });
-        // }
 		
-		// 所有点连起来绘制
-        // line = new THREE.Line(geometry, material);
-        // 所有点分线段绘制
-        line = new THREE.LineSegments(geometry, material);
+		let geometry = new THREE.BufferGeometry().setFromPoints(vectorData);
+        let line = new THREE.LineSegments(geometry, lineMaterial);
         return line;
     }
     
@@ -988,9 +1025,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         var points = curve.getPoints( 32 );
         var geometry = new THREE.BufferGeometry().setFromPoints( points );
 
-        var material = new THREE.LineBasicMaterial({ color: getColor(entity, data) });
+        // var material = new THREE.LineBasicMaterial({ color: getColor(entity, data) });
 
-        var arc = new THREE.Line(geometry, material);
+        var arc = new THREE.Line(geometry, material.clone());
         arc.position.x = entity.center.x;
         arc.position.y = entity.center.y;
         arc.position.z = entity.center.z;
@@ -999,7 +1036,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     }
 
     function drawSolid(entity, data) {
-        var material, mesh, verts,
+        var mesh, verts,
             geometry = new THREE.Geometry();
 
         verts = geometry.vertices;
@@ -1024,14 +1061,14 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
             geometry.faces.push(new THREE.Face3(1, 3, 2));
         }
 
-        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
+        // let material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
 
-        return new THREE.Mesh(geometry, material);
+        return new THREE.Mesh(geometry, material.clone());
         
     }
 
     function drawText(entity, data) {
-        var geometry, material, text;
+        var geometry, text;
 
         if(!font)
             return console.warn('Text is not supported without a Three.js font loaded with THREE.FontLoader! Load a font of your choice and pass this into the constructor. See the sample for this repository or Three.js examples at http://threejs.org/examples/?q=text#webgl_geometry_text for more details.');
@@ -1039,11 +1076,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         // 特殊处理格式：\fArial|b0|i0|c134|p34|;1     或者     \f仿宋|b0|i0|c134|p49|;H
     	let entityText = entity.text.replace(/\\f.*;/gi, '')
         
-        geometry = new THREE.TextGeometry(entityText, { font: font, height: 0, size: entity.textHeight || 12 });
+        geometry = new THREE.TextBufferGeometry(entityText, { font: font, height: 0, size: entity.textHeight || 12 });
 
-        material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
+        // let material = new THREE.MeshBasicMaterial({ color: dxfLineTextColor[0] || getColor(entity, data) });
 
-        text = new THREE.Mesh(geometry, material);
+        text = new THREE.Mesh(geometry, material.clone());
         text.position.x = entity.startPoint.x;
         text.position.y = entity.startPoint.y;
         text.position.z = entity.startPoint.z;
@@ -1052,7 +1089,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     }
 
     function drawPoint(entity, data) {
-        var geometry, material, point;
+        var geometry, point;
 
         geometry = new THREE.Geometry();
 
@@ -1071,9 +1108,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         geometry.colors = colors;
         geometry.computeBoundingBox();
 
-        material = new THREE.PointsMaterial( { size: 0.05, vertexColors: dxfLineTextColor[0] || THREE.VertexColors } );
+        // let material = new THREE.PointsMaterial( { size: 0.05, vertexColors: dxfLineTextColor[0] || THREE.VertexColors } );
         
-        point = new THREE.Points(geometry, material);
+        point = new THREE.Points(geometry, material.clone());
         scene.add(point);
     }
 
@@ -1098,8 +1135,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         }
         
         for(var i = 0; i < block.entities.length; i++) {
-            var childEntity = drawEntity(block.entities[i], data, group);
-            if(childEntity) group.add(childEntity);
+            let bName = entity.name + i;
+        	if (!blockData[bName]) {
+        		blockData[bName] = drawEntity(block.entities[i], data, group);
+        	}
+        	if (blockData[bName]) {
+        		let cloneBlock = blockData[bName].clone();
+        		group.add(cloneBlock);
+        	}
+            // var childEntity = drawEntity(block.entities[i], data, group);
+            // if(childEntity) group.add(childEntity);
         }
 
         return group;
