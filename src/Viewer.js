@@ -721,6 +721,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		});
 	}
 	
+	// 删除画布节点
+	this.deleteCurrentNodeCtrl = function() {
+		parent.removeChild(renderer.domElement)
+	}
+	
 	// 切换图纸
 	this.sceneAddDataCtrl = function (dxfData) {
 		data = dxfData
@@ -730,10 +735,16 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        max: { x: false, y: false, z: false}
 	    }
 		
-		clearTimeout(selectTimeOut)
-		selectTimeOut = setTimeout(() => {
-			mergeDxfBlockLine()
-		}, 2000)
+		this.resetCameraCtrl()
+		
+		if (data && data.entities && data.entities.length > 0) {
+			clearTimeout(selectTimeOut)
+			selectTimeOut = setTimeout(() => {
+				mergeDxfBlockLine()
+			}, 2000)
+		} else{
+			controls.updateScreenPosition('sceneAddFinishDxf')
+		}
 	}
 	
     function initCamera(width,height) {

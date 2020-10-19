@@ -336,6 +336,13 @@ cadCanvas.zoomCameraCtrl(1)
 * 注：传入的值要为number类型的
 * 注：和type=updateScreenPositionDxf的返回缩放值保持一致
 
+----
+
+###### 18,删除画布节点：
+* 调用接口
+```javascript
+cadCanvas.deleteCurrentNodeCtrl()
+```
 
 
 
