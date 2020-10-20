@@ -141,7 +141,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         max: { x: false, y: false, z: false}
     };
     
-    var camera = initCamera(width,height);
+    var camera = initCamera(width, height);
     var renderer = this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
     renderer.setSize(width, height);
     //设置背景色与透明度
@@ -549,6 +549,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		}
     }
 	
+	// 通用批注新增方法，手动控制批注绘制开关
+    this.closeDrawCtrl = function () {
+        LineControl.closeDraw()
+    }
+	
 	// 批注定位
 	this.selectedDxfAnnotationCtrl = function (value) {
 		let x = (value.coordinate.drawRectWorldCoord.startX + value.coordinate.drawRectWorldCoord.endX) / 2
@@ -655,7 +660,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	
 	
 	// 重置相机位置
-	this.resetCameraCtrl = function (changeWidth, changeHeight) {
+	this.resetCameraCtrl = function (changeWidth, changeHeight, imageWidth, imageHeight) {
 		if (changeWidth) {
 			recordWidth = changeWidth
 		}
@@ -663,8 +668,15 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			recordHeight = changeHeight
 		}
 		
+		if (imageWidth && imageHeight) {
+			dims = {
+		        min: { x: -imageWidth / 10, y: -imageHeight / 10, z: false},
+		        max: { x: imageWidth / 10, y: imageHeight / 10, z: false}
+		    }
+		}
+		
 		camera = null
-		camera = initCamera(recordWidth,recordHeight)
+		camera = initCamera(recordWidth, recordHeight)
 		camera.updateProjectionMatrix()
 		renderer.setSize( recordWidth, recordHeight );
 		
@@ -677,6 +689,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	    LineControl.LineRender(this.renderer);
 		
 		this.render()
+		
+		if (imageWidth && imageHeight) {
+			controls.updateScreenPosition('sceneAddFinishDxf')
+		}
 	}
 	
 	// 清空场景
@@ -727,7 +743,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	}
 	
 	// 切换图纸
-	this.sceneAddDataCtrl = function (dxfData) {
+	this.sceneAddDataCtrl = function (dxfData, widthData) {
 		data = dxfData
 		// 重置最大最小点
 		dims = {
@@ -735,7 +751,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	        max: { x: false, y: false, z: false}
 	    }
 		
-		this.resetCameraCtrl()
+		if (widthData) {
+			this.resetCameraCtrl(widthData.width, widthData.height, widthData.imageWidth, widthData.imageHeight)
+		}
 		
 		if (data && data.entities && data.entities.length > 0) {
 			clearTimeout(selectTimeOut)
@@ -747,15 +765,15 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		}
 	}
 	
-    function initCamera(width,height) {
+    function initCamera(width, height) {
         width = width || parent.innerWidth;
         height = height || parent.innerHeight;
         var aspectRatio = width / height;
 
         var upperRightCorner = { x: dims.max.x || ZONE_ENTITIES, y: dims.max.y || ZONE_ENTITIES };
         var lowerLeftCorner = { x: dims.min.x || -ZONE_ENTITIES, y: dims.min.y || -ZONE_ENTITIES };
-
-        // Figure out the current viewport extents
+        
+        // 当前的视口范围
         var vp_width = upperRightCorner.x - lowerLeftCorner.x;
         var vp_height = upperRightCorner.y - lowerLeftCorner.y;
         var center = center || {
@@ -763,7 +781,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
             y: vp_height / 2 + lowerLeftCorner.y
         };
 
-        // Fit all objects into current ThreeDXF viewer
+        // 将所有对象放入当前的可视区域
         var extentsAspectRatio = Math.abs(vp_width / vp_height);
         if (aspectRatio > extentsAspectRatio) {
             vp_width = vp_height * aspectRatio;

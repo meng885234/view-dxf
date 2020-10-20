@@ -74,6 +74,19 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		    }
         })
     }
+	
+	// 关闭所有的绘制状态
+	this.closeDraw = function () {
+        drawBtnIdArr.forEach((item, index) => {
+            let elementNode = document.getElementById(item)
+            if (!elementNode) {
+                return true
+            }
+            elementNode.classList.remove('on')
+            elementNode.classList.add('off')
+        })
+        fsm.highlight()
+    }
 
     /**
      * highlight :默认状态

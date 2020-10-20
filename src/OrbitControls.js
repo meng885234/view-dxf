@@ -255,6 +255,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	// 修改
 	this.changeOrbitControls = function (dims, changeWidth, changeHeight, changeCamera, changeParent, changeScene){
 		if (changeCamera) {
+			originPointStart = ''
 			scope.object = null
 			scope.object = changeCamera
 		}

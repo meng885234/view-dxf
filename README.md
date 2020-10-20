@@ -344,6 +344,14 @@ cadCanvas.zoomCameraCtrl(1)
 cadCanvas.deleteCurrentNodeCtrl()
 ```
 
+----
+
+###### 19,手动关闭批注绘制开关：
+* 调用接口
+```javascript
+cadCanvas.closeDrawCtrl()
+```
+
 
 
 
