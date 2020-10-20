@@ -761,6 +761,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 				mergeDxfBlockLine()
 			}, 2000)
 		} else{
+			// 场景添加进度(结束)
+    		dxfCallback({
+				type: 'sceneAddFinishDxf',
+				data: 100.00
+			})
+    		// 全部加载完毕，开始计算缩放初始值
 			controls.updateScreenPosition('sceneAddFinishDxf')
 		}
 	}
