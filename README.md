@@ -78,17 +78,10 @@ let data = [{annotationId: 320,	// 批注的唯一标识
 		type: "drawCloudType"
 	},	// 批注操作完成之后callback出来的数据，不用处理同步保存就好
 	type: 1,    // 问题类型（1:一般问题，2：严重问题）---如果只是使用批注模块，这个参数不要传
-	toRole: 1,	// 角色，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）---参数已被遗弃
 	markNumber: 1,			// 右下角的标号，如果不传，则会使用数组的"index+1"的值
 	roleColor: '#000000'	// 传入绘制的颜色值
 }]
 ```
-* 注：角色所对应的颜色值
-	{label: "校对人", value: 1, color: '#0A86FF'},
-    {label: "负责人", value: 2, color: '#FF8100'},
-    {label: "审核人", value: 3, color: '#0AC99A'},
-    {label: "审定人", value: 4, color: '#FC0261'},
-    {label: "设计人", value: 5, color: '#A327FF'},
 * 调用接口
 ```javascript
 cadCanvas.dxfAnnotationListDrawCtrl(data)
@@ -129,8 +122,6 @@ cadCanvas.sceneRemoveViewerCtrl()
 ```javascript
 let data = {
 	annotationId: 320,	// 批注的唯一标识
-	toRole: 1,	// 角色，用来区分绘制时的颜色（1:校对人，2:负责人，3:审核人，4:审定人，5:设计人）---参数已被遗弃
-	roleColor: '#000000',
 	coordinate: {
 		drawRectScreenCoord: {
 			startX: 38,
@@ -148,10 +139,19 @@ let data = {
 	}
 }
 ```
+或
+```javascript
+let data = annotationId || elementId || modelId
+let config = {
+	showCenter: false,		// 是否定位到屏幕中央, 默认: false
+	showColor: '#00ff00'	// 闪烁的颜色值, 默认: #00ff00
+}
+```
 * 调用接口
 ```javascript
-cadCanvas.selectedDxfAnnotationCtrl(data)
+cadCanvas.selectedDxfAnnotationCtrl(data, config)
 ```
+* 注：data可直接传入批注id或者modelId, config不是必传参数
 
 ----
 

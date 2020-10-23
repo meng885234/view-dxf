@@ -554,54 +554,89 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
         LineControl.closeDraw()
     }
 	
-	// 批注定位
-	this.selectedDxfAnnotationCtrl = function (value) {
-		let x = (value.coordinate.drawRectWorldCoord.startX + value.coordinate.drawRectWorldCoord.endX) / 2
-		let y = (value.coordinate.drawRectWorldCoord.startY + value.coordinate.drawRectWorldCoord.endY) / 2
-		let selectedObj = {
-			startPoint: camera.position,
-			middlePoint: {
-				x: (x + camera.position.x) / 2,
-				y: (y + camera.position.y) / 2,
-				z: 0
-			},
-			endPoint: {
-				x: x,
-				y: y,
-				z: 0
-			}
+	// 构件定位与高亮显示
+	this.selectedDxfAnnotationCtrl = function (value, config) {
+		let x = 0, y = 0, id = '', index = 0, max = 50, timeValue = 1, showColor = '', queryData = {}, roleColor = dxfLineTextColor[0];
+		if (value.annotationId) {
+			id = value.annotationId
+		} else {
+			id = value + ''
 		}
-		let points = LineControl.getBezierCurvePoint(selectedObj)
-		let index = 0
-		let max = 50
-		let timeValue = 1
-		clearInterval(moveTimeOut)
-		clearTimeout(selectTimeOut)
-		moveTimeOut = setInterval(() => {
-			camera.position.set(points[index].x, points[index].y, camera.position.z)
-			camera.lookAt(new THREE.Vector3(points[index].x, points[index].y, camera.position.z))
-			controls.target = points[index]
-			controls.update()
-			this.render()
-			index++
-			if(index >= max){
-				clearInterval(moveTimeOut)
+		queryData = scene.getObjectByName(id)
+		if (config && config.showColor) {
+			showColor = config.showColor
+		}
+		if (config && config.showCenter) {
+			if (value.coordinate) {
+				x = (value.coordinate.drawRectWorldCoord.startX + value.coordinate.drawRectWorldCoord.endX) / 2
+				y = (value.coordinate.drawRectWorldCoord.startY + value.coordinate.drawRectWorldCoord.endY) / 2
+			} else {
+				if (queryData && queryData.geometry) {
+					x = queryData.geometry.boundingSphere.center.x
+					y = queryData.geometry.boundingSphere.center.y
+				} else {
+					dxfCallback({
+						type: 'messageInfoDxf',
+						data: '当前图纸未找到对应构件！'
+					})
+					return false;
+				}
 			}
-		}, timeValue)
+			let selectedObj = {
+				startPoint: camera.position,
+				middlePoint: {
+					x: (x + camera.position.x) / 2,
+					y: (y + camera.position.y) / 2,
+					z: 0
+				},
+				endPoint: {
+					x: x,
+					y: y,
+					z: 0
+				}
+			}
+			let points = LineControl.getBezierCurvePoint(selectedObj)
+			clearInterval(moveTimeOut)
+			clearTimeout(selectTimeOut)
+			moveTimeOut = setInterval(() => {
+				camera.position.set(points[index].x, points[index].y, camera.position.z)
+				camera.lookAt(new THREE.Vector3(points[index].x, points[index].y, camera.position.z))
+				controls.target = points[index]
+				controls.update()
+				this.render()
+				index++
+				if(index >= max){
+					clearInterval(moveTimeOut)
+				}
+			}, timeValue)
+		} else {
+			max = 0
+		}
 		selectTimeOut = setTimeout(() => {
-			blinkAnnotationCtrl(value)
-		}, max * timeValue * 40)
+			if (queryData && queryData.material) {
+				let color = queryData.material.color
+				let sRgb = 'RGB(' + color.r * 255 + ',' + color.g * 255 + ',' + color.b * 255 + ')'
+				roleColor = colorRGBtoHex(sRgb)
+				blinkAnnotationCtrl(id, roleColor, showColor)
+			} else {
+				dxfCallback({
+					type: 'messageInfoDxf',
+					data: '当前图纸未找到对应构件！'
+				})
+				return false;
+			}
+		}, max * timeValue * 30)
 	}
 	
 	// 闪烁选中的矩形框
-    function blinkAnnotationCtrl (data) {
+    function blinkAnnotationCtrl (id, roleColor, showColor) {
     	for (let i = 0; i < 6; i++) {
     		setTimeout(() => {
     			if (parseInt(i%2) > 0) {
-    				scene.getObjectByName(data.annotationId).material.color.set( data.roleColor || roleColorValue )
+    				scene.getObjectByName(id).material.color.set( roleColor || roleColorValue )
     				scope.render()
     			} else {
-    				scene.getObjectByName(data.annotationId).material.color.set( highlightColorValue )
+    				scene.getObjectByName(id).material.color.set( showColor || highlightColorValue )
     				scope.render()
     			}
     		}, i * 200)
@@ -1344,6 +1379,16 @@ function showHide(el, show) {
 // helper functions
 function show(el) { showHide(el, true); }
 function hide(el) { showHide(el); }
+
+// rgb to 16
+function colorRGBtoHex(color) {
+    var rgb = color.split(',');
+    var r = parseInt(rgb[0].split('(')[1]);
+    var g = parseInt(rgb[1]);
+    var b = parseInt(rgb[2].split(')')[0]);
+    var hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    return hex;
+ }
 
 /*
 export {
