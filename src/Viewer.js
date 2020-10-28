@@ -725,9 +725,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		
 		this.render()
 		
-		if (imageWidth && imageHeight) {
-			controls.updateScreenPosition('sceneAddFinishDxf')
-		}
+		controls.updateScreenPosition('sceneAddFinishDxf')
 	}
 	
 	// 清空场景
