@@ -867,7 +867,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         
         if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            line.name = el.annotationId
+            line.name = el.annotationId + ''
             line.userData = el.coordinate
     	} else {
     		line.name = 'rect_move'
@@ -913,7 +913,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		let plane = new THREE.Mesh( geometry, material );
 		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            plane.name = el.annotationId
+            plane.name = el.annotationId + ''
             plane.userData = el.coordinate
     	} else {
     		plane.name = 'plane_move'
@@ -1069,7 +1069,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		let plane = new THREE.Mesh( geometry, material );
 		if (el && el.annotationId) {
     		// 给自己绘制的矩形添加特殊标识
-            plane.name = el.annotationId
+            plane.name = el.annotationId + ''
             plane.userData = el.coordinate
     	} else {
     		plane.name = 'arrow_move'
@@ -1393,7 +1393,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
 		let curveObject = new THREE.Line(geometry, material)
 		if (el && el.annotationId) {
 			// 之前的云线框
-			curveObject.name = el.annotationId
+			curveObject.name = el.annotationId + ''
             curveObject.userData = el.coordinate
 		} else {
     		curveObject.name = 'bezier_curve_move'

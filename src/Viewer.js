@@ -307,7 +307,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	            // 添加模型中的uuid，以便于后期操作中的模型与图纸的联动
 	            if (entity.extendedData && entity.extendedData.customStrings && entity.extendedData.customStrings[0]) {
 	            	obj.userData.modelUUID = entity.extendedData.customStrings[0]
-	            	obj.name = entity.extendedData.customStrings[0]
+	            	obj.name = entity.extendedData.customStrings[0] + ''
 	            }
 				scene.add(obj);
 	        }
@@ -379,6 +379,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     
     // 根据批注id单条删除dxf批注
     this.deleteDxfAnnotationCtrl = function (id) {
+    	id = id + ''
     	if (scene.getObjectByName(id)) {
             scene.remove(scene.getObjectByName(id));
         }
@@ -403,6 +404,33 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     		if (scene.getObjectByName(item.annotationId)) {
     			this.deleteDxfAnnotationCtrl(item.annotationId)
 			}
+    	})
+    	this.render()
+    }
+    
+    // 批注的显示与隐藏
+    this.showAllDxfAnnotationCtrl = function (list, show) {
+    	list.forEach((item,index) => {
+    		let id = item
+    		if (item && item.annotationId) {
+    			id = item.annotationId
+    		}
+    		id = id + ''
+    		if (scene.getObjectByName(id)) {
+	            scene.getObjectByName(id).material.visible = show;
+	        }
+	    	if (scene.getObjectByName('type' + id)) {
+	            scene.getObjectByName('type' + id).material.visible = show;
+	        }
+	    	if (scene.getObjectByName('content' + id)) {
+	            scene.getObjectByName('content' + id).material.visible = show;
+	        }
+	    	if (scene.getObjectByName('markCircle' + id)) {
+	            scene.getObjectByName('markCircle' + id).material.visible = show;
+	        }
+	    	if (scene.getObjectByName('markNumber' + id)) {
+	            scene.getObjectByName('markNumber' + id).material.visible = show;
+	        }
     	})
     	this.render()
     }
@@ -501,7 +529,10 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	    } else if(Object.prototype.toString.call(list)==='[object Object]'){
 	    	list = pointToScreenPosition(list)
 	    } else{
-			console.log('传入的数据格式不对，请重新按照开发文档整理数据格式')
+	    	dxfCallback({
+				type: 'messageInfoDxf',
+				data: '传入的数据格式不对，请重新按照开发文档整理数据格式！'
+			})
 	    }
     	callback(list)
     }
@@ -562,6 +593,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		} else {
 			id = value + ''
 		}
+		id = id + ''
 		queryData = scene.getObjectByName(id)
 		if (config && config.showColor) {
 			showColor = config.showColor

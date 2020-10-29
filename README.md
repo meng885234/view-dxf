@@ -45,7 +45,7 @@ cadCanvas.render()
 
 ### 批注模块
 
-###### 1，按钮功能对应的节点ID:
+###### 按钮功能对应的节点ID:
 绘制矩形框：`drawRectId`
 绘制云线框：`drawCloudId`
 绘制平面框：`drawPlaneId`
@@ -57,7 +57,7 @@ cadCanvas.render()
 
 ----
 
-###### 2，查询到的批注列表，在画布上显示所需要的数据格式，以及调用的接口：
+###### 查询到的批注列表，在画布上显示所需要的数据格式，以及调用的接口：
 * 数据格式以及最少含有的字段
 ```javascript
 let data = [{annotationId: 320,	// 批注的唯一标识
@@ -89,7 +89,7 @@ cadCanvas.dxfAnnotationListDrawCtrl(data)
 
 ----
 
-###### 3，批量删除批注调用的接口：
+###### 批量删除批注调用的接口：
 * 数据格式以及最少含有的字段
 ```javascript
 let data = [{annotationId: 320}, {annotationId: 321}]
@@ -101,7 +101,7 @@ cadCanvas.deleteAllDxfAnnotationCtrl(data)
 
 ----
 
-###### 4，单条删除批注调用的接口：
+###### 单条删除批注调用的接口：
 * 调用接口
 ```javascript
 cadCanvas.deleteDxfAnnotationCtrl(annotationId)
@@ -109,7 +109,7 @@ cadCanvas.deleteDxfAnnotationCtrl(annotationId)
 
 ----
 
-###### 5，清空画布调用的接口：
+###### 清空画布调用的接口：
 * 调用接口
 ```javascript
 cadCanvas.sceneRemoveViewerCtrl()
@@ -117,7 +117,21 @@ cadCanvas.sceneRemoveViewerCtrl()
 
 ----
 
-###### 6，定位当前批注到屏幕中间并高亮提示调用的接口：
+###### 隐藏与显示构件或者批注的接口：
+* 数据格式以及最少含有的字段
+```javascript
+let data = [{annotationId: 320}, {annotationId: 321}]
+or data = [320, 321]
+let show = true		// true为显示，false为隐藏
+```
+* 调用接口
+```javascript
+cadCanvas.showAllDxfAnnotationCtrl(data, show)
+```
+
+----
+
+###### 定位当前批注到屏幕中间并高亮提示调用的接口：
 * 数据格式以及最少含有的字段
 ```javascript
 let data = {
@@ -155,7 +169,7 @@ cadCanvas.selectedDxfAnnotationCtrl(data, config)
 
 ----
 
-###### 7，初始化完成的返回数据：
+###### 初始化完成的返回数据：
 * 注：只有初始化完成之后才可以进行批注的增删改查等操作，其中的100.00代表的是初始化的进度到了100%
 * 数据格式
 ```javascript
@@ -167,7 +181,7 @@ let data = {
 
 ----
 
-###### 8，批注绘制完成的返回数据：
+###### 批注绘制完成的返回数据：
 绘制矩形框：`drawRectType`
 绘制云线框：`drawCloudType`
 绘制平面框：`drawPlaneType`
@@ -183,7 +197,7 @@ let data = {
 
 ----
 
-###### 9，移动缩放之后的返回数据：
+###### 移动缩放之后的返回数据：
 * 数据格式
 ```javascript
 let data = {
@@ -201,7 +215,7 @@ let data = {
 
 ----
 
-###### 10，重新计算当前批注的屏幕位置：
+###### 重新计算当前批注的屏幕位置：
 * 数据格式
 ```javascript
 let data = [{
@@ -232,7 +246,7 @@ cadCanvas.pointToScreenPositionCtrl(data, (callback) => {
 
 ----
 
-###### 11,新绘制的批注框与原来绘制的批注框的type都是selectedComponentDxf：
+###### 新绘制的批注框与原来绘制的批注框的type都是selectedComponentDxf：
 * 新绘制的批注框的callback数据格式
 ```javascript
 let data = {
@@ -285,14 +299,14 @@ let data = {
 
 ----
 
-###### 12,每次新增之后操作：
+###### 每次新增之后操作：
 * 第一步：保存数据库
 * 第二步：保存成功之后，再按照数据规则调用第二个接口：cadCanvas.dxfAnnotationListDrawCtrl(data)
 * 第三步：如果未点击保存，或者保存未成功，则需要调用刷新的接口为：cadCanvas.render()
 
 ----
 
-###### 13,手指抬起的callback数据格式：
+###### 手指抬起的callback数据格式：
 ```javascript
 let data = {
 	type: "touchendDxf",
@@ -302,7 +316,7 @@ let data = {
 
 ----
 
-###### 14,修改绘制颜色值：
+###### 修改绘制颜色值：
 * 调用接口
 ```javascript
 cadCanvas.changeRoleColorCtrl('#00ff00')
@@ -311,7 +325,7 @@ cadCanvas.changeRoleColorCtrl('#00ff00')
 
 ----
 
-###### 15,回归主视图 (重置视角)：
+###### 回归主视图 (重置视角)：
 * 调用接口
 ```javascript
 cadCanvas.resetCameraCtrl()
@@ -319,7 +333,7 @@ cadCanvas.resetCameraCtrl()
 
 ----
 
-###### 16,修改显示窗口大小：
+###### 修改显示窗口大小：
 * 调用接口
 ```javascript
 cadCanvas.resetCameraCtrl(width, height)
@@ -327,7 +341,7 @@ cadCanvas.resetCameraCtrl(width, height)
 
 ----
 
-###### 17,传入缩放值：
+###### 传入缩放值：
 * 调用接口
 ```javascript
 cadCanvas.zoomCameraCtrl(1)
@@ -338,7 +352,7 @@ cadCanvas.zoomCameraCtrl(1)
 
 ----
 
-###### 18,删除画布节点：
+###### 删除canvas节点：
 * 调用接口
 ```javascript
 cadCanvas.deleteCurrentNodeCtrl()
@@ -346,7 +360,7 @@ cadCanvas.deleteCurrentNodeCtrl()
 
 ----
 
-###### 19,手动关闭批注绘制开关：
+###### 手动关闭批注绘制开关：
 * 调用接口
 ```javascript
 cadCanvas.closeDrawCtrl()
@@ -359,11 +373,22 @@ cadCanvas.closeDrawCtrl()
 
 ```javascript
 // cad-view代表的是你插入dxf的节点id，width代表显示时的宽，height代表显示时的高
-
 let cadCanvas = new Viewer({}, document.getElementById('cad-view'), width, height, {}, (dxfCallback) => {
 	console.log(dxfCallback, '用户操作之后的回调函数')
 })
+
+// 如若切换的下面为图片，则需要这样调用，并且下方图片一定要根据canvas的宽高比动态居中全部显示出来
+cadCanvas.sceneAddDataCtrl({}, {
+	width: canvas宽度,
+	height: canvas高度,
+	imageWidth: 下方需要批注的图片的宽度,
+	imageHeight: 下方需要批注的图片的高度
+})
+
+// 如若之后再修改屏幕的宽高
+cadCanvas.resetCameraCtrl(width, height, imageWidth, imageHeight)
 ```
+
 
 ### 移动端操作方式说明
 1，单指表示平移(如果打开批注，则为绘制)

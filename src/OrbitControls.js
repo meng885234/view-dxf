@@ -290,8 +290,8 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 		let endDistance = Math.sqrt(Math.pow((second.x - first.x), 2) + Math.pow((second.y - first.y), 2))
 		screenData.moveAndZoom.zoom = endDistance / startDistance
 		
-		screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate)
-		screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate)
+		screenData.minScreenCoord = scope.pointToScreenPosition(screenData.minCoordinate, screenData)
+		screenData.maxScreenCoord = scope.pointToScreenPosition(screenData.maxCoordinate, screenData)
 		dxfCallback({
     		type: 'updateScreenPositionDxf',
     		data: JSON.parse(JSON.stringify(screenData))
@@ -313,9 +313,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	    v4.x = v4.x * 0.5 + 0.5
 	    v4.y = v4.y * 0.5 + 0.5
 	    v4.z = v4.z * 0.5 + 0.5
-//	    v4.x = v4.x * screenData.canvasWidth
 	    v4.x = v4.x * (screenValue ? screenValue.canvasWidth : 1920)
-//	    v4.y = (1 - v4.y) * screenData.canvasHeight
 	    v4.y = (1 - v4.y) * (screenValue ? screenValue.canvasHeight : 1080)
 	    return v4
 	};
