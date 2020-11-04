@@ -169,6 +169,14 @@ cadCanvas.selectedDxfAnnotationCtrl(data, config)
 
 ----
 
+###### 传入坐标位置定位到屏幕中央：
+* 调用接口
+```javascript
+cadCanvas.moveToScreenPositionCtrl(x, y)
+```
+
+----
+
 ###### 初始化完成的返回数据：
 * 注：只有初始化完成之后才可以进行批注的增删改查等操作，其中的100.00代表的是初始化的进度到了100%
 * 数据格式

@@ -276,7 +276,7 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	this.updateScreenPosition = function (val) {
 		// 计算偏移量
 		if (!originPointStart) {
-			originPointStart = getIntersects(originPoint)
+			originPointStart = scope.getIntersects(originPoint)
 		}
 		let originPointEnd = scope.pointToScreenPosition(originPointStart, screenData)
 		screenData.moveAndZoom.offsetX = originPointEnd.x - originPoint.clientX
@@ -319,14 +319,17 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	};
 	
 	// 屏幕坐标转三维坐标
-	function getIntersects(event) {
-        var x = event.clientX; //x position within the element.
-        var y = event.clientY;  //y position within the element.
+	this.getIntersects = function(event) {
+        var x = event.clientX;
+        var y = event.clientY;
+        if (event.type && event.type.indexOf('touch') != -1) {
+        	x = event.changedTouches[0].clientX;
+        	y = event.changedTouches[0].clientY;
+        }
         let mouseX = (x / screenData.canvasWidth) * 2 - 1;
         let mouseY = -(y / screenData.canvasHeight) * 2 + 1;
         var vector = new THREE.Vector3(mouseX, mouseY, -1);
         vector.unproject(scope.object);
-        /* 返回向量 */
         return vector;
     }
 

@@ -631,11 +631,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 			clearInterval(moveTimeOut)
 			clearTimeout(selectTimeOut)
 			moveTimeOut = setInterval(() => {
-				camera.position.set(points[index].x, points[index].y, camera.position.z)
-				camera.lookAt(new THREE.Vector3(points[index].x, points[index].y, camera.position.z))
-				controls.target = points[index]
-				controls.update()
-				this.render()
+				moveToPositionCtrl(points[index])
 				index++
 				if(index >= max){
 					clearInterval(moveTimeOut)
@@ -660,6 +656,15 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		}, max * timeValue * 30)
 	}
 	
+	// 位置变换
+	function moveToPositionCtrl (point) {
+		camera.position.set(point.x, point.y, camera.position.z)
+		camera.lookAt(new THREE.Vector3(point.x, point.y, camera.position.z))
+		controls.target = point
+		controls.update()
+		scope.render()
+	}
+	
 	// 闪烁选中的矩形框
     function blinkAnnotationCtrl (id, roleColor, showColor) {
     	for (let i = 0; i < 6; i++) {
@@ -675,6 +680,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     	}
     }
 	
+	// 传入坐标位置定位到屏幕中央
+	this.moveToScreenPositionCtrl = function (x, y){
+		let point = controls.getIntersects({clientX: x, clientY: y})
+		moveToPositionCtrl(point)
+	}
 	
 	
 	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置

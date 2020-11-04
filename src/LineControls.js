@@ -160,7 +160,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         	// 记录绘制结束点屏幕坐标
         	drawRectScreenCoord.endX = event.clientX || event.touches[ 0 ].clientX;
             drawRectScreenCoord.endY = event.clientY || event.touches[ 0 ].clientY;
-            vectorRect = getIntersects(event);
+            vectorRect = controls.getIntersects(event);
         }
     	
         switch (fsm.state) {
@@ -418,7 +418,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
     function drawLineOnClick(event){
         var btnNum = event.button;
         if (btnNum == 0){
-            var intersects = getIntersects(event);
+            var intersects = controls.getIntersects(event);
             var vector3_x, vector3_z;
             if (!window_mouse){
                 /* 依据 windwo_mouse 标识避免事件的重复添加 */
@@ -506,7 +506,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
      * @param event
      */
     function drawLineOnMove(event) {
-        var intersects = getIntersects(event);
+        var intersects = controls.getIntersects(event);
         /* 判断交点是否在 x(-100, 100) ，z(-100, 100)(平面)之间 */
 
         /* 鼠标左键未点击时线段的移动状态 */
@@ -611,7 +611,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 scene.remove(scene.getObjectByName('arrow_move'));
             }
             
-            var vector = getIntersects(event);
+            var vector = controls.getIntersects(event);
         	drawRectWorldCoord.startX = vectorRect.x
         	drawRectWorldCoord.startY = vectorRect.y
         	drawRectWorldCoord.endX = vector.x
@@ -627,7 +627,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
                 scene.remove(scene.getObjectByName('arrow_move'));
             }
             
-            var vector = getIntersects(event);
+            var vector = controls.getIntersects(event);
         	drawRectWorldCoord.startX = vectorRect.x
         	drawRectWorldCoord.startY = vectorRect.y
         	drawRectWorldCoord.endX = vector.x
@@ -668,7 +668,7 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
         drawRectWorldCoord.endX = vector.x
         drawRectWorldCoord.endY = vector.y
         */
-    	var vector = getIntersects(event);
+    	var vector = controls.getIntersects(event);
         if (vectorRect.x < vector.x) {
         	drawRectWorldCoord.startX = vectorRect.x
         	drawRectWorldCoord.endX = vector.x
@@ -1534,23 +1534,6 @@ export default function LineControls(camera,parent,scene,width,height,controls,r
             INTERSECTEDFIRST = null;
         }
         listBox.style.display = 'none';
-    }
-
-    /* 获取鼠标点击的位置 */
-    function getIntersects(event) {
-        var rect = event.target.getBoundingClientRect();
-        var x = event.clientX - rect.left; //x position within the element.
-        var y = event.clientY - rect.top;  //y position within the element.
-        if (event.type.indexOf('touch') != -1) {
-        	x = event.changedTouches[0].clientX - rect.left;
-        	y = event.changedTouches[0].clientY - rect.top;
-        }
-        mouse.x = (x / width) * 2 - 1;
-        mouse.y = -(y / height) * 2 + 1;
-        var vector = new THREE.Vector3(mouse.x, mouse.y, -1);
-        vector.unproject(camera);
-        /* 返回向量 */
-        return vector;
     }
 
     activate();
