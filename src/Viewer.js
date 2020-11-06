@@ -690,8 +690,8 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置
 	this.changeProjectionMatrixCtrl = function (val){
 		
-		let dw = 1080 * recordWidth / recordHeight
-		let dh = 1080
+		let dw = val.modelHeight * recordWidth / recordHeight
+		let dh = val.modelHeight
 		
 		let x1 = mapNumRange(0, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
 		let x2 = mapNumRange(dw, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
