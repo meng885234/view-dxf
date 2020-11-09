@@ -320,11 +320,15 @@ export default function OrbitControls( object, domElement, scene, dxfCallback ) 
 	
 	// 屏幕坐标转三维坐标
 	this.getIntersects = function(event) {
-        var x = event.clientX;
-        var y = event.clientY;
+		var rect = {left: 0, top: 0}
+		if (event.target && event.target.getBoundingClientRect()) {
+			rect = event.target.getBoundingClientRect();
+		}
+        var x = event.clientX - rect.left;
+        var y = event.clientY - rect.top;
         if (event.type && event.type.indexOf('touch') != -1) {
-        	x = event.changedTouches[0].clientX;
-        	y = event.changedTouches[0].clientY;
+        	x = event.changedTouches[0].clientX - rect.left;
+        	y = event.changedTouches[0].clientY - rect.top;
         }
         let mouseX = (x / screenData.canvasWidth) * 2 - 1;
         let mouseY = -(y / screenData.canvasHeight) * 2 + 1;

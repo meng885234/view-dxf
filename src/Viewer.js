@@ -401,8 +401,9 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     // 删除所有的批注框
     this.deleteAllDxfAnnotationCtrl = function (list) {
     	list.forEach((item,index) => {
-    		if (scene.getObjectByName(item.annotationId)) {
-    			this.deleteDxfAnnotationCtrl(item.annotationId)
+    		let id = item.annotationId + ''
+    		if (scene.getObjectByName(id)) {
+    			this.deleteDxfAnnotationCtrl(id)
 			}
     	})
     	this.render()
@@ -445,10 +446,11 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
     // 添加dxf批注
     this.dxfAnnotationListDrawCtrl = function (list) {
     	list.forEach((item,index) => {
-    		if (scene.getObjectByName(item.annotationId)) {
-    			this.deleteDxfAnnotationCtrl(item.annotationId)
+    		let id = item.annotationId + ''
+    		if (scene.getObjectByName(id)) {
+    			this.deleteDxfAnnotationCtrl(id)
     		}
-    		if (!(scene.getObjectByName(item.annotationId))) {
+    		if (!(scene.getObjectByName(id))) {
     			// 绘制图形
     			LineControl.drawRectInitData(item)
     			
