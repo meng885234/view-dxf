@@ -692,8 +692,13 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 	// 根据图纸对应的屏幕坐标的最小点与最大点修改相机位置
 	this.changeProjectionMatrixCtrl = function (val){
 		
-		let dw = val.modelHeight * recordWidth / recordHeight
+		let dw = val.modelWidth
 		let dh = val.modelHeight
+		if (val.offsetX < val.offsetY) {
+			dw = val.modelHeight * recordWidth / recordHeight
+		} else {
+			dh = val.modelWidth * recordHeight / recordWidth
+		}
 		
 		let x1 = mapNumRange(0, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
 		let x2 = mapNumRange(dw, val.minPositionx, val.maxPositionx, dims.min.x, dims.max.x)
@@ -727,7 +732,7 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		let dMax = controls.pointToScreenPosition(dims.max, screenValue)
 		let mx = (dMin.x + dMax.x) / 2
 		let my = (dMin.y + dMax.y) / 2
-		controls.pan(((sx - mx) * recordWidth / dw) + (val.offsetX * (1 - recordWidth / dw)), (sy - my) * recordHeight / dh)
+		controls.pan(((sx - mx) * recordWidth / dw) + (val.offsetX * (1 - recordWidth / dw)), (sy - my) * recordHeight / dh + (val.offsetY * (1 - recordHeight / dh)))
 		controls.update('modelToDxf')
 	}
 	function mapNumRange(num, inMin, inMax, outMin, outMax){
