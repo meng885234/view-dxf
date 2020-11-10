@@ -767,14 +767,12 @@ function Viewer(data, parent, width, height, font, dxfCallback) {
 		controls.changeOrbitControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    controls.target.x = camera.position.x;
 	    controls.target.y = camera.position.y;
-	    controls.update();
+	    controls.update('sceneAddFinishDxf');
 		
 	    LineControl.changeLineControls(dims, recordWidth, recordHeight, camera, parent, scene)
 	    LineControl.LineRender(this.renderer);
 		
 		this.render()
-		
-		controls.updateScreenPosition('sceneAddFinishDxf')
 	}
 	
 	// 清空场景
